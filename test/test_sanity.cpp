@@ -16,6 +16,7 @@
 
 #include <libiov.h>
 
-int main(int argc, char **argv) {
-  return 0;
-}
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
+
+TEST_CASE("test basic library sanity", "[basic]") {}
