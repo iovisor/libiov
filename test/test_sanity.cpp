@@ -15,9 +15,11 @@
  */
 
 #include <libiov.h>
-#include "libiov/command.hpp"
+#include "libiov/command.h"
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
-TEST_CASE("test basic library sanity", "[basic]") {}
+TEST_CASE("test basic library sanity", "[basic]") {
+  { iov::IOModule mod; }
+}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "libiov/command.hpp"
-#include "libiov/graph.hpp"
+#include "libiov/command.h"
+#include "libiov/graph.h"
 
 namespace iov {}  // namespace iov

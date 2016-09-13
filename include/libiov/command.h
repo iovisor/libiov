@@ -18,6 +18,8 @@
 
 #include <list>
 
+#include "libiov/graph.h"
+
 namespace iov {
 
 class IOModule;
@@ -32,7 +34,7 @@ class Command {
  public:
   Command() = default;
   Command(const Command &) = delete;
-  operator=(const Command &) = delete;
+  Command &operator=(const Command &) = delete;
   ModuleListType &GetModules() { return modules_; }
   const ModuleListType &GetModules() const { return modules_; }
 };

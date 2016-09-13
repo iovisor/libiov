@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 PLUMgrid, Inc.
+ * Copyright (c) 2016, PLUMgrid, http://plumgrid.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
-#include "libiov/graph.h"
+#include <memory>
+#include <vector>
 
-namespace iov {
+#include <libiov.h>
+#include "libiov/command.h"
 
-IOModule::IOModule() {}
-IOModule::~IOModule() {}
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
 
-}  // namespace iov
+using std::vector;
+using std::unique_ptr;
+
+TEST_CASE("test multiple module loading", "[module_multi]") {
+  vector<unique_ptr<iov::IOModule>> modules;
+  for (int i = 0; i < 10; ++i)
+    modules.push_back(unique_ptr<iov::IOModule>(new iov::IOModule));
+}
