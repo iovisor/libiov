@@ -2,4 +2,4 @@
 BasedOnStyle: Google
 AllowShortIfStatementsOnASingleLine: false
 IndentCaseLabels: false
-AccessModifierOffset: -2
+AccessModifierOffset: -1

@@ -14,10 +14,27 @@
  * limitations under the License.
  */
 
-#include <libiov.h>
-#include "libiov/command.hpp"
+#pragma once
 
-#define CATCH_CONFIG_MAIN
-#include "catch.hpp"
+#include <list>
 
-TEST_CASE("test basic library sanity", "[basic]") {}
+namespace iov {
+
+class IOModule;
+
+class Command {
+ public:
+  typedef std::list<IOModule> ModuleListType;
+
+ private:
+  ModuleListType modules_;
+
+ public:
+  Command() = default;
+  Command(const Command &) = delete;
+  operator=(const Command &) = delete;
+  ModuleListType &GetModules() { return modules_; }
+  const ModuleListType &GetModules() const { return modules_; }
+};
+
+}  // namespace iov

@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-#include <libiov.h>
 #include "libiov/command.hpp"
+#include "libiov/graph.hpp"
 
-#define CATCH_CONFIG_MAIN
-#include "catch.hpp"
-
-TEST_CASE("test basic library sanity", "[basic]") {}
+namespace iov {}  // namespace iov

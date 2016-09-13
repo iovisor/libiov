@@ -15,3 +15,13 @@
  */
 
 #pragma once
+
+namespace iov {
+
+class IOModule {
+ public:
+  IOModule();
+  ~IOModule();
+};
+
+}  // namespace iov

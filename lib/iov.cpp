@@ -14,3 +14,6 @@
  * limitations under the License.
  */
 
+#include <libiov/graph.hpp>
+
+namespace iov {}
