@@ -23,11 +23,17 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
+using std::string;
 using std::vector;
 using std::unique_ptr;
+using namespace iov;
 
 TEST_CASE("test multiple module loading", "[module_multi]") {
-  vector<unique_ptr<iov::IOModule>> modules;
-  for (int i = 0; i < 10; ++i)
-    modules.push_back(unique_ptr<iov::IOModule>(new iov::IOModule));
+  IOModule *mod;
+  mod = new IOModule();
+  string text = "";
+  REQUIRE(mod->Init(text) == true);
+  Command cmd;
+  for (const auto &mod : cmd.GetModules())
+    ;
 }

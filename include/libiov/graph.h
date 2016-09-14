@@ -16,12 +16,19 @@
 
 #pragma once
 
+#include <string>
+#include "libiov/internal/types.h"
+
 namespace iov {
 
 class IOModule {
+ private:
+  internal::FileDescPtr prog_;
+
  public:
   IOModule();
   ~IOModule();
+  bool Init(const std::string &text);
 };
 
 }  // namespace iov

@@ -16,5 +16,35 @@
 
 #include "libiov/command.h"
 #include "libiov/graph.h"
+#include "libiov/internal/types.h"
 
-namespace iov {}  // namespace iov
+using iov::internal::make_unique;
+using std::move;
+using std::string;
+using std::unique_ptr;
+
+namespace iov {
+
+void Command::AddModule(const string &name, unique_ptr<IOModule> mod) {
+  modules_[name] = move(mod);
+}
+
+unique_ptr<IOModule> Command::TakeModule(const string &name) {
+  auto it = modules_.find(name);
+  if (it == modules_.end())
+    return make_unique<IOModule>();
+
+  auto p = move(it->second);
+  modules_.erase(it);
+  return p;
+}
+
+bool Command::LookupModule(const string &name, IOModule *result) const {
+  auto it = modules_.find(name);
+  if (it == modules_.end())
+    return false;
+  result = &*it->second;
+  return true;
+}
+
+}  // namespace iov

@@ -16,9 +16,13 @@
 
 #include "libiov/graph.h"
 
+using std::string;
+
 namespace iov {
 
 IOModule::IOModule() {}
 IOModule::~IOModule() {}
+
+bool IOModule::Init(const string &text) { return true; }
 
 }  // namespace iov

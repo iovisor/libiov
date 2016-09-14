@@ -16,7 +16,9 @@
 
 #pragma once
 
-#include <list>
+#include <map>
+#include <memory>
+#include <string>
 
 #include "libiov/graph.h"
 
@@ -26,7 +28,7 @@ class IOModule;
 
 class Command {
  public:
-  typedef std::list<IOModule> ModuleListType;
+  typedef std::map<std::string, std::unique_ptr<IOModule>> ModuleListType;
 
  private:
   ModuleListType modules_;
@@ -36,7 +38,10 @@ class Command {
   Command(const Command &) = delete;
   Command &operator=(const Command &) = delete;
   ModuleListType &GetModules() { return modules_; }
+  bool LookupModule(const std::string &name, IOModule *result) const;
   const ModuleListType &GetModules() const { return modules_; }
+  void AddModule(const std::string &name, std::unique_ptr<IOModule> mod);
+  std::unique_ptr<IOModule> TakeModule(const std::string &name);
 };
 
 }  // namespace iov
