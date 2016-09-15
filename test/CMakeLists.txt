@@ -11,4 +11,4 @@ add_test(NAME style-check COMMAND ${CMAKE_SOURCE_DIR}/scripts/style-check.sh)
 #set_tests_properties(style-check PROPERTIES PASS_REGULAR_EXPRESSION ".*")
 
 add_test(NAME test_sanity COMMAND ./test_sanity)
-add_test(NAME test_module_multi COMMAND ./test_module_multi)
+add_test(NAME test_module_multi COMMAND sudo ./test_module_multi)

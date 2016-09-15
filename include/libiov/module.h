@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 PLUMgrid, Inc.
+ * Copyright (c) 2016, PLUMgrid, http://plumgrid.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,34 @@
 
 #pragma once
 
+#include <future>
 #include <string>
-#include "libiov/internal/types.h"
 
-namespace iov {}  // namespace iov
+namespace ebpf {
+class BPFModule;
+}
+
+namespace iov {
+
+namespace internal {
+struct FileDesc;
+}
+
+class IOModule {
+ public:
+  enum ModuleType {
+    NetModule,
+  };
+
+ private:
+  std::unique_ptr<internal::FileDesc> prog_;
+  std::unique_ptr<ebpf::BPFModule> mod_;
+
+ public:
+  IOModule();
+  ~IOModule();
+  std::future<bool> Init(std::string &&text);
+  std::future<bool> Load(ModuleType type);
+};
+
+}  // namespace iov

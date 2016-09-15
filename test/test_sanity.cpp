@@ -15,7 +15,7 @@
  */
 
 #include <libiov.h>
-#include "libiov/command.h"
+#include "libiov/module.h"
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"

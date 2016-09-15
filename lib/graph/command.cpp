@@ -17,6 +17,7 @@
 #include "libiov/command.h"
 #include "libiov/graph.h"
 #include "libiov/internal/types.h"
+#include "libiov/module.h"
 
 using iov::internal::make_unique;
 using std::move;

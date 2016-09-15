@@ -3,3 +3,4 @@ BasedOnStyle: Google
 AllowShortIfStatementsOnASingleLine: false
 IndentCaseLabels: false
 AccessModifierOffset: -1
+AlignAfterOpenBracket: false
