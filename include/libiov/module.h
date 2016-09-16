@@ -19,31 +19,32 @@
 #include <future>
 #include <string>
 
+#include "libiov/types.h"
+
 namespace ebpf {
 class BPFModule;
 }
 
 namespace iov {
 
-namespace internal {
-struct FileDesc;
-}
-
 class IOModule {
  public:
   enum ModuleType {
-    NetModule,
+    NET_FORWARD,
+    NET_POLICY,
   };
 
  private:
-  std::unique_ptr<internal::FileDesc> prog_;
+  FileDescPtr prog_;
   std::unique_ptr<ebpf::BPFModule> mod_;
+
+ private:
+  std::future<bool> Load(ModuleType type);
 
  public:
   IOModule();
   ~IOModule();
-  std::future<bool> Init(std::string &&text);
-  std::future<bool> Load(ModuleType type);
+  std::future<bool> Init(std::string &&text, ModuleType type);
 };
 
 }  // namespace iov

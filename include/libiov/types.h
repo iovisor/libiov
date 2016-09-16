@@ -20,7 +20,33 @@
 #include <memory>
 
 namespace iov {
+
 namespace internal {
 
+// A wrapper class to automatically clean up file descriptors.
+struct FileDesc {
+  FileDesc(int fd) : fd(fd) {}
+  FileDesc(std::nullptr_t) : fd(-1) {}
+  operator int() { return fd; }
+  bool operator==(const FileDesc &other) const { return fd == other.fd; }
+  int fd;
+};
+
+// A helper struct to implement RAII cleanup for FileDesc
+struct FileDescDeleter {
+  void operator()(FileDesc *fd) {
+    if (fd)
+      ::close(*fd);
+  }
+};
+
 }  // namespace internal
+
+template <typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args &&... params) {
+  return std::unique_ptr<T>(new T(std::forward<Args>(params)...));
+}
+
+typedef std::unique_ptr<internal::FileDesc, internal::FileDescDeleter> FileDescPtr;
+
 }  // namespace iov

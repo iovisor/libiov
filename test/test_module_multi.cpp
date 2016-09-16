@@ -34,8 +34,7 @@ TEST_CASE("test multiple module loading", "[module_multi]") {
   for (int i = 0; i < 5; ++i) {
     string text = "int foo(void *ctx) { return 0; }";
     auto mod = unique_ptr<IOModule>(new IOModule());
-    REQUIRE(mod->Init(std::move(text)).get() == true);
-    REQUIRE(mod->Load(IOModule::NetModule).get() == true);
+    REQUIRE(mod->Init(std::move(text), IOModule::NET_FORWARD).get() == true);
     cmd.AddModule("test" + std::to_string(i), std::move(mod));
   }
   for (const auto &mod : cmd.GetModules())

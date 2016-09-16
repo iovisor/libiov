@@ -33,8 +33,8 @@ namespace iov {
 IOModule::IOModule() {}
 IOModule::~IOModule() {}
 
-future<bool> IOModule::Init(string &&text) {
-  return std::async(std::launch::async,
+future<bool> IOModule::Init(string &&text, ModuleType type) {
+  future<bool> res = std::async(std::launch::async,
       [this](string &&text) -> bool {
         mod_ = make_unique<ebpf::BPFModule>(0);
         if (mod_->load_string(text, nullptr, 0) < 0)
@@ -42,19 +42,22 @@ future<bool> IOModule::Init(string &&text) {
         return true;
       },
       std::move(text));
+  if (!res.get())
+    return res;
+  return Load(type);
 }
 
 future<bool> IOModule::Load(ModuleType type) {
   return std::async(std::launch::async, [this, type]() -> bool {
-    FileDescPtr fd;
     switch (type) {
-    case NetModule:
-      fd.reset(new FileDesc(bpf_prog_load(BPF_PROG_TYPE_SCHED_CLS,
+    case NET_FORWARD:
+      prog_.reset(new FileDesc(bpf_prog_load(BPF_PROG_TYPE_SCHED_CLS,
           (const struct bpf_insn *)mod_->function_start(0),
           mod_->function_size(0), mod_->license(), mod_->kern_version(),
           nullptr, 0)));
-      if (*fd >= 0)
+      if (*prog_ >= 0)
         return true;
+    default: {}
     }
     return false;
   });
