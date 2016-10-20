@@ -22,6 +22,7 @@
 
 #include "libiov/internal/types.h"
 #include "libiov/module.h"
+#include "libiov/prog.h"
 
 using std::future;
 using std::promise;
