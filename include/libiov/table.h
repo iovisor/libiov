@@ -52,7 +52,7 @@ class Table {
  ~Table();
 
  // Api to display key/value pair and size
- void ShowTable(std::string table_name);
+ std::map<std::string, std::string> ShowTable(std::string table_name);
 
  // Apis' to Insert/Update/Delete elements of the table
  int Insert(std::string table_name, std::vector<uint8_t> key, std::vector<uint8_t> value);

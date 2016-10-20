@@ -24,10 +24,24 @@
 #include "libiov/types.h"
 
 class FileSystem {
- public:
+
+  // Root of the filesystem is /sys/fs/bpf/libiov. 
+  // Ex: ls /sys/fs/bpf/libiov
+  // tables/ modules/
+  // Tables will have all the global tables, shared or not by IOModules
+  // Modules will have all the IOModule.
+  // Ex: ls /sys/fs/bpf/libiov/modules
+  // module_1/ module_2/ etc....
+  // where module_id, unique for each IOModule
+  // Ex: ls /sys/fs/bpf/libiov/module_<id>
+  // events/ state/ libiov/
+  // Events has the handlers (like ingress/egress packet, kprobe, etc...)
+  // State is a list of tables local to the IOModule
+  // Libiov has the metadata for each table under state/
+
   FileSystem();
   ~FileSystem();
-  bool Create(std::string pathname, std::string file_name, int fd);
+  bool Save(std::string pathname, std::string file_name, int fd);
   int Open(std::string pathname);
   std::vector<std::string> Show(std::string pathname);
   bool Delete(std::string pathname, std::string file_name);

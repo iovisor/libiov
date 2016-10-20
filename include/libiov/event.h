@@ -25,41 +25,27 @@
 
 class Event {
 
- // Name of the table
- std::string table_name;
+ // Name of the event
+ std::string event_name;
 
- // Key/Value pair to store local properties of a module
- std::map<uint8_t, uint8_t> data;
+ // File descriptor of the event to store 
+ int event_fd;
 
- // Maximun number of propeties for a table
- int max_size;
+ // cls_bpf, xdp etc...
+ int event_type;
 
- // Define if a table is local or global
- bool global;
-
- // Flags for table accessibility. RW, Hidden etc..
- uint8_t visibility;
-
- // File descriptor of the table to store key/value
- int table_fd;
-
- // File desciptor that keeps the metadata for the table,
- // specifically types for key and value
- int table_desc_fd;
-
+ // handler for ingress or egress
+ int direction;
 
  Event();
  ~Event();
 
- // Api to display key/value pair and size
- void ShowTable(std::string table_name);
+ // Api to display property of the event
+ void ShowEvent(std::string event_name);
 
- // Apis' to Insert/Update/Delete elements of the table
- int Insert(std::string table_name, std::vector<uint8_t> key, std::vector<uint8_t> value);
- int Update(std::string table_name, std::vector<uint8_t> key, std::vector<uint8_t> value);
- int Delete(std::string table_name, std::vector<uint8_t> key, std::vector<uint8_t> value);
+ // Apis' to Insert/Delete an event
+ int Insert(std::string event_name);
+ int Delete(std::string event_name);
 
- // Api to reset to default value element of the table (counters etc...)
- int Reset(std::string table_name, std::vector<uint8_t> key, std::vector<uint8_t> value);
 };
 
