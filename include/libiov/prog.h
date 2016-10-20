@@ -22,13 +22,43 @@
 #include <iostream>
 #include <uuid/uuid.h>
 
-#include "libiov/types.h"
+#include "libiov/table.h"
+#include "libiov/event.h"
 
+class Module {
 
-class ModuleFunc {
+  // Module should be a collection of tables and events, where tables
+  // collect the states of a module (counters, lookups etc..) and events
+  // are the ingress and egress packet, kprobe etc... handlers
 
+  // Random number that uniquily identify a module. Look at filestem.h
+  // for filesystem layout
   std::map<std::string, uuid_t> prog_uuid;
-  ModuleFunc();
-  ~ModuleFunc();
-  std::vector<std::string> ShowModule(std::string module_name);
+
+  // Human readable name of the module to tranlate the uuid
+  std::string name;
+
+  struct Properties {
+    // Tables associated to this module
+    std::vector<Table> tables;
+
+    // Event associated to this module
+    std::vector<Event> events;
+  };
+
+  Module();
+  ~Module();
+
+  // Api to retrive uuid from prog_name
+  uuid_t *NameToUuid(std::string module_name);
+
+  // Api to list all the name's properties of a module. Like tables and events.
+  Properties ShowModule(std::string module_name);
+
+  // Api to display one/all table states for a module
+  std::map<std::string, Table> LocalTableStates(std::string table_name);
+
+  // Api to display all events for a module
+  std::vector<Event> LocalEvent();
+
 };
