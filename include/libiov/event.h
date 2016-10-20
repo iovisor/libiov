@@ -23,7 +23,7 @@
 
 #include "libiov/types.h"
 
-class Table {
+class Event {
 
  // Name of the table
  std::string table_name;
@@ -48,8 +48,8 @@ class Table {
  int table_desc_fd;
 
 
- Table();
- ~Table();
+ Event();
+ ~Event();
 
  // Api to display key/value pair and size
  void ShowTable(std::string table_name);
