@@ -27,7 +27,7 @@
 
 class Module {
 
-  // Module should be a collection of tables and events, where tables
+  // Module should be a collection of tables and/or events, where tables
   // collect the states of a module (counters, lookups etc..) and events
   // are the ingress and egress packet, kprobe etc... handlers
 
@@ -35,7 +35,7 @@ class Module {
   // for filesystem layout
   std::map<std::string, uuid_t> prog_uuid;
 
-  // Human readable name of the module to tranlate the uuid
+  // Human readable name of the module to translate the uuid
   std::string name;
 
   struct Properties {
