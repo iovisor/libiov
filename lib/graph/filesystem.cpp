@@ -32,6 +32,36 @@ using std::promise;
 using std::string;
 using namespace iov::internal;
 
+#ifndef __NR_bpf
+#if defined(__powerpc64__)
+#define __NR_bpf 361
+#else
+#define __NR_bpf 321
+#endif
+#endif
+
+static __u64 ptr_to_u64(void *ptr)
+{
+  return (__u64) (unsigned long) ptr;
+}
+
+int bpf_obj_pin(int fd, const char *pathname)
+{
+  union bpf_attr attr; 
+  attr.pathname = ptr_to_u64((void *)pathname);
+  attr.bpf_fd = fd;
+  
+
+  return syscall(__NR_bpf, BPF_OBJ_PIN, &attr, sizeof(attr));
+}
+
+int bpf_obj_get(const char *pathname)
+{
+  union bpf_attr attr; 
+  attr.pathname   = ptr_to_u64((void *)pathname);
+
+  return syscall(__NR_bpf, BPF_OBJ_GET, &attr, sizeof(attr));
+}
 
 FileSystem::FileSystem() {}
 FileSystem::~FileSystem() {}
