@@ -23,6 +23,9 @@
 #include "libiov/internal/types.h"
 #include "libiov/module.h"
 #include "libiov/prog.h"
+#include "libiov/table.h"
+#include "libiov/filesystem.h"
+#include "libiov/event.h"
 
 using std::future;
 using std::promise;
@@ -38,7 +41,7 @@ future<bool> IOModule::Init(string &&text, ModuleType type) {
   future<bool> res = std::async(std::launch::async,
       [this](string &&text) -> bool {
         mod_ = make_unique<ebpf::BPFModule>(0);
-        if (mod_->load_string(text, nullptr, 0) < 0)
+        if (mod_->load_string(text, nullptr, 0) < 0) 
           return false;
         return true;
       },
@@ -64,4 +67,8 @@ future<bool> IOModule::Load(ModuleType type) {
   });
 }
 
+int IOModule::GetFileDescriptor() {
+  FileDesc *fd = prog_.get();
+  return *fd;
+}
 }  // namespace iov

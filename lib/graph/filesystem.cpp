@@ -32,6 +32,9 @@ using std::promise;
 using std::string;
 using namespace iov::internal;
 
+// For now copy the code from libbcc. We'll see later if we'll
+// include libbbc or not.
+
 #ifndef __NR_bpf
 #if defined(__powerpc64__)
 #define __NR_bpf 361
@@ -39,6 +42,11 @@ using namespace iov::internal;
 #define __NR_bpf 321
 #endif
 #endif
+
+namespace iov {
+
+FileSystem::FileSystem() {}
+FileSystem::~FileSystem() {}
 
 static __u64 ptr_to_u64(void *ptr)
 {
@@ -63,8 +71,13 @@ int bpf_obj_get(const char *pathname)
   return syscall(__NR_bpf, BPF_OBJ_GET, &attr, sizeof(attr));
 }
 
-FileSystem::FileSystem() {}
-FileSystem::~FileSystem() {}
+
+/* Save
+ * Api to save the file descriptor of a bpf program, bpf table.
+ * pathname will have the location in the filesytem. Check filesytem.h
+ * for more info.
+ * file_name is the file where the fd will be save
+ */
 
 int FileSystem::Save(std::string pathname, std::string file_name, int fd) {
      int ret = 0;
@@ -75,6 +88,12 @@ int FileSystem::Save(std::string pathname, std::string file_name, int fd) {
      return ret;
 }
 
+/* Open
+ * api to retrive the file descriptor of a bpf program, bpf table.
+ * pathname will have the location in the filesytem. Check filesytem.h
+ * for more info.
+ */
+
 int FileSystem::Open(std::string pathname) {
      int ret = 0;
      const char *file = NULL;
@@ -83,4 +102,27 @@ int FileSystem::Open(std::string pathname) {
      return ret;
 }
 
+/* Show
+ * api to show the filesystem. Conceptually same as:
+ * Ex: ls /sys/fs/bpf/libiov
+ * tables/ modules/
+ * pathname will have the starting location in the filesytem. Check filesytem.h
+ * for more info.
+ */
 
+std::vector<std::string> FileSystem::Show(std::string pathname) {
+     std::vector<std::string> ret;
+     return ret;
+}
+
+/* Delete
+ * api to delete a specific file <file_name>.
+ * pathname will have the location in the filesytem. Check filesytem.h
+ * for more info.
+ */
+
+bool FileSystem::Delete(std::string pathname, std::string file_name) {
+     bool ret = false;
+     return ret;
+}
+} // namespace iov

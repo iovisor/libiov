@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <sys/stat.h>
 #include <future>
 #include <string>
 #include <iostream>
@@ -24,13 +25,16 @@
 #include "libiov/types.h"
 
 #define LibiovRootPath    "/sys/fs/bpf/libiov"
-#define GlobalTablePath   LibiovRootPath + "/tables/"
-#define ModulePath        LibiovRootPath + "/modules/"
+#define GlobalTablePath   "/sys/fs/bpf/libiov/tables/"
+#define ModulePath        "/sys/fs/bpf/libiov/modules/"
 
 #define ModuleEventPath   "/events/"
 #define StatePath         "/state/"  
 #define MetadataPath      "/libiov/"
 
+
+namespace iov {
+  class IOModule;
 
 class FileSystem {
 
@@ -54,4 +58,6 @@ class FileSystem {
   int Open(std::string pathname);
   std::vector<std::string> Show(std::string pathname);
   bool Delete(std::string pathname, std::string file_name);
+  uuid_t * GenerateUuid();
 };
+} // namespace iov

@@ -45,6 +45,7 @@ class IOModule {
   IOModule();
   ~IOModule();
   std::future<bool> Init(std::string &&text, ModuleType type);
+  int GetFileDescriptor();
 };
 
 }  // namespace iov
