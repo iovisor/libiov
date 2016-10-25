@@ -34,22 +34,20 @@ using std::vector;
 using std::unique_ptr;
 using namespace iov;
 
-TEST_CASE("test module save to filesystem", "[module_save]") {
-  Command cmd;
-  uuid_t id1;
+TEST_CASE("test save local module/table to filesystem", "[module_save]") {
   char *uuid_str = NULL;
   const char *file_path;
   int fd;
-
+  FileSystem fs;
   string path = ModulePath;
   string text = "BPF_TABLE(\"hash\", u32, u32, num_ports, 1); int foo(void *ctx) { return 0; } int boo(void *ctx) { return 0; }";
+  string del_module = "rm -r -f ";
 
   auto mod = unique_ptr<IOModule>(new IOModule());
   REQUIRE(mod->Init(std::move(text), IOModule::NET_FORWARD).get() == true);
 
-  uuid_generate( (unsigned char *)&id1 ); 
   uuid_str = new char[100];
-  uuid_unparse(id1, uuid_str);
+  fs.GenerateUuid(uuid_str);
 
   path.append(uuid_str);
   file_path = path.c_str();
@@ -59,10 +57,14 @@ TEST_CASE("test module save to filesystem", "[module_save]") {
   file_path = path.c_str();
   REQUIRE(mkdir(file_path, S_IRWXU) == 0);
 
-  path.append("foo");
-
-  file_path = path.c_str();
   fd = mod->GetFileDescriptor();
-  REQUIRE(bpf_obj_pin(fd, file_path) == 0);
+
+  REQUIRE(fs.Save(file_path, "foo", fd) == 0);
+
+  del_module.append(ModulePath);
+  del_module.append(uuid_str);
+  file_path = del_module.c_str();
+  REQUIRE(system(file_path) == 0);
+ 
   delete[] uuid_str;
 }

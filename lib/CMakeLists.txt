@@ -5,6 +5,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 add_library(iov iov.cpp)
-target_link_libraries(iov iovgraph bcc pthread)
+target_link_libraries(iov iovgraph bcc pthread uuid)
 
 add_subdirectory(graph)

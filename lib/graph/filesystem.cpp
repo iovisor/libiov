@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright (c) 2016, PLUMgrid, http://plumgrid.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,7 @@
  */
 
 #include <linux/bpf.h>
+#include <string.h>
 
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
@@ -32,45 +33,10 @@ using std::promise;
 using std::string;
 using namespace iov::internal;
 
-// For now copy the code from libbcc. We'll see later if we'll
-// include libbbc or not.
-
-#ifndef __NR_bpf
-#if defined(__powerpc64__)
-#define __NR_bpf 361
-#else
-#define __NR_bpf 321
-#endif
-#endif
-
 namespace iov {
 
 FileSystem::FileSystem() {}
 FileSystem::~FileSystem() {}
-
-static __u64 ptr_to_u64(void *ptr)
-{
-  return (__u64) (unsigned long) ptr;
-}
-
-int bpf_obj_pin(int fd, const char *pathname)
-{
-  union bpf_attr attr; 
-  attr.pathname = ptr_to_u64((void *)pathname);
-  attr.bpf_fd = fd;
-  
-
-  return syscall(__NR_bpf, BPF_OBJ_PIN, &attr, sizeof(attr));
-}
-
-int bpf_obj_get(const char *pathname)
-{
-  union bpf_attr attr; 
-  attr.pathname   = ptr_to_u64((void *)pathname);
-
-  return syscall(__NR_bpf, BPF_OBJ_GET, &attr, sizeof(attr));
-}
-
 
 /* Save
  * Api to save the file descriptor of a bpf program, bpf table.
@@ -124,5 +90,11 @@ std::vector<std::string> FileSystem::Show(std::string pathname) {
 bool FileSystem::Delete(std::string pathname, std::string file_name) {
      bool ret = false;
      return ret;
+}
+
+void FileSystem::GenerateUuid(char *uuid_str) {
+     uuid_t id1;
+     uuid_generate( (unsigned char *)&id1 );
+     uuid_unparse(id1, uuid_str);
 }
 } // namespace iov

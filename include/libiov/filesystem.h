@@ -21,6 +21,7 @@
 #include <future>
 #include <string>
 #include <iostream>
+#include <uuid/uuid.h>
 
 #include "libiov/types.h"
 
@@ -52,12 +53,13 @@ class FileSystem {
   // State is a list of tables local to the IOModule
   // Libiov has the metadata for each table under state/
 
+ public:
   FileSystem();
   ~FileSystem();
   int Save(std::string pathname, std::string file_name, int fd);
   int Open(std::string pathname);
   std::vector<std::string> Show(std::string pathname);
   bool Delete(std::string pathname, std::string file_name);
-  uuid_t * GenerateUuid();
+  void GenerateUuid(char *uuid_str);
 };
 } // namespace iov
