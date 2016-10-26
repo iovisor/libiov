@@ -17,6 +17,8 @@
 #include <memory>
 #include <vector>
 
+#include <iostream>
+#include <fstream>
 #include <libiov.h>
 #include "libiov/command.h"
 #include "libiov/module.h"
@@ -34,37 +36,29 @@ using std::vector;
 using std::unique_ptr;
 using namespace iov;
 
-TEST_CASE("test save local event/table fd to filesystem. Delete at the end", "[module_save]") {
-  char *uuid_str = NULL;
+TEST_CASE("test get local event/table fd to filesystem", "[module_get]") {
   const char *file_path;
-  int fd;
+  std::string text;
   FileSystem fs;
-  string path = ModulePath;
-  string text = "int foo(void *ctx) { return 0; }";
   string del_module = "rm -r -f ";
+  std::ifstream moduleFile;
+  std::ifstream deleteFile;
 
-  auto mod = unique_ptr<IOModule>(new IOModule());
-  REQUIRE(mod->Init(std::move(text), IOModule::NET_FORWARD).get() == true);
+  moduleFile.open("/var/tmp/module.txt");
+  deleteFile.open("/var/tmp/delete.txt");
+ 
+  getline(moduleFile,text);
+  moduleFile.close();
 
-  uuid_str = new char[100];
-  fs.GenerateUuid(uuid_str);
+  file_path = text.c_str();
 
-  path.append(uuid_str);
-  file_path = path.c_str();
-  REQUIRE(mkdir(file_path, S_IRWXU) == 0);
+  REQUIRE(fs.Open(file_path) > 0);
 
-  path.append(ModuleEventPath);
-  file_path = path.c_str();
-  REQUIRE(mkdir(file_path, S_IRWXU) == 0);
+  getline(deleteFile,text);
+  deleteFile.close();
 
-  fd = mod->GetFileDescriptor();
-
-  REQUIRE(fs.Save(file_path, "foo", fd) == 0);
-
-  del_module.append(ModulePath);
-  del_module.append(uuid_str);
+  del_module.append(text);
   file_path = del_module.c_str();
   REQUIRE(system(file_path) == 0);
  
-  delete[] uuid_str;
 }

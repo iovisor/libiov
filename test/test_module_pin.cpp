@@ -17,6 +17,8 @@
 #include <memory>
 #include <vector>
 
+#include <iostream>
+#include <fstream>
 #include <libiov.h>
 #include "libiov/command.h"
 #include "libiov/module.h"
@@ -34,14 +36,18 @@ using std::vector;
 using std::unique_ptr;
 using namespace iov;
 
-TEST_CASE("test save local event/table fd to filesystem. Delete at the end", "[module_save]") {
+TEST_CASE("test save local event/table fd to filesystem", "[module_pin]") {
   char *uuid_str = NULL;
   const char *file_path;
   int fd;
   FileSystem fs;
   string path = ModulePath;
   string text = "int foo(void *ctx) { return 0; }";
-  string del_module = "rm -r -f ";
+  std::ofstream moduleFile;
+  std::ofstream deleteFile;
+
+  moduleFile.open("/var/tmp/module.txt");
+  deleteFile.open("/var/tmp/delete.txt");
 
   auto mod = unique_ptr<IOModule>(new IOModule());
   REQUIRE(mod->Init(std::move(text), IOModule::NET_FORWARD).get() == true);
@@ -53,6 +59,8 @@ TEST_CASE("test save local event/table fd to filesystem. Delete at the end", "[m
   file_path = path.c_str();
   REQUIRE(mkdir(file_path, S_IRWXU) == 0);
 
+  deleteFile << file_path;
+
   path.append(ModuleEventPath);
   file_path = path.c_str();
   REQUIRE(mkdir(file_path, S_IRWXU) == 0);
@@ -61,10 +69,11 @@ TEST_CASE("test save local event/table fd to filesystem. Delete at the end", "[m
 
   REQUIRE(fs.Save(file_path, "foo", fd) == 0);
 
-  del_module.append(ModulePath);
-  del_module.append(uuid_str);
-  file_path = del_module.c_str();
-  REQUIRE(system(file_path) == 0);
- 
+  path.append("foo");
+  file_path = path.c_str();
+
+  moduleFile << file_path;
   delete[] uuid_str;
+  moduleFile.close();
+  deleteFile.close();
 }
