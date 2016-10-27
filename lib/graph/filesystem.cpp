@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright (c) 2016, PLUMgrid, http://plumgrid.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,7 +35,9 @@ using namespace iov::internal;
 
 namespace iov {
 
-FileSystem::FileSystem() {}
+FileSystem::FileSystem() {
+root_path = LibiovRootPath;
+}
 FileSystem::~FileSystem() {}
 
 /* Save
@@ -68,6 +70,70 @@ int FileSystem::Open(std::string pathname) {
      return ret;
 }
 
+void FileSystem::ProcessEntry(std::string directory,
+                              std::vector<std::string> &files)
+{
+    std::string dirToOpen = root_path;
+
+    if (directory.compare("libiov") != 0 ) {
+       dirToOpen = root_path + directory;
+       //set the new path for the content of the directory
+       root_path = dirToOpen + "/";
+    }
+
+    auto dir = opendir(dirToOpen.c_str());
+
+    if(NULL == dir)
+    {
+        std::cout << "could not open directory: " << dirToOpen.c_str() << std::endl;
+        return;
+    }
+
+    auto entity = readdir(dir);
+
+    while(entity != NULL)
+    {
+        ProcessEntity(entity, files);
+        entity = readdir(dir);
+    }
+
+    //we finished with the directory so remove it from the path
+    root_path.resize(root_path.length() - 1 - directory.length());
+    closedir(dir);
+}
+
+void FileSystem::ProcessEntity(struct dirent* entity,
+                               std::vector<std::string> &files)
+{
+    //find entity type
+    if (entity->d_type == DT_DIR)
+    {//it's an direcotry
+        //don't process the  '..' and the '.' directories
+        if(entity->d_name[0] == '.')
+        {
+            return;
+        }
+
+        //it's an directory so process it
+        ProcessEntry(std::string(entity->d_name), files);
+        return;
+    }
+
+    if (entity->d_type == DT_REG)
+    {//regular file
+        ProcessFile(std::string(entity->d_name), files);
+        return;
+    }
+
+    std::cout << "Not a file or directory: " << entity->d_name << std::endl;
+}
+
+void FileSystem::ProcessFile(std::string file,
+                             std::vector<std::string> &files)
+{
+    files.push_back(file);
+}
+
 /* Show
  * api to show the filesystem. Conceptually same as:
  * Ex: ls /sys/fs/bpf/libiov
@@ -76,9 +142,66 @@ int FileSystem::Open(std::string pathname) {
  * for more info.
  */
 
-std::vector<std::string> FileSystem::Show(std::string pathname) {
-     std::vector<std::string> ret;
-     return ret;
+void FileSystem::Show(std::string pathname, std::vector<std::string> &files) {
+     ProcessEntry(pathname, files);
+}
+
+bool FileSystem::dirExists(std::string dir_path) {
+    struct stat sb;
+
+    if (stat(dir_path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))
+        return true;
+    else
+        return false;
+}
+
+int FileSystem::DeleteFilesInDirectory(std::string dirpath, bool recursive) {
+
+    if (dirpath.empty())
+        return 0;
+
+    auto *folder = opendir(dirpath.c_str());
+    if (folder == NULL)
+        return errno;
+
+    struct dirent *next_file;
+    std::string filepath;
+    int ret_val;
+
+    while ( (next_file = readdir(folder)) != NULL )
+    {
+        if (next_file->d_name[0] == '.')
+        {
+           continue;
+        }
+        filepath = dirpath + "/" + next_file->d_name;
+        //dirExists will check if the "filepath" is a directory
+        if (dirExists(filepath))
+        {
+            if (!recursive)
+                //if we aren't recursively deleting in subfolders, skip this dir
+                 continue;
+
+            ret_val = DeleteFilesInDirectory(filepath, recursive);
+
+            if (ret_val != 0)
+            {
+                closedir(folder);
+                return ret_val;
+            }
+        }
+
+        ret_val = remove(filepath.c_str());
+
+        if (ret_val != 0 && ret_val != ENOENT)
+        {
+            closedir(folder);
+            return ret_val;
+        }
+    }
+
+    closedir(folder);
+    return 0;
 }
 
 /* Delete
@@ -87,9 +210,10 @@ std::vector<std::string> FileSystem::Show(std::string pathname) {
  * for more info.
  */
 
-bool FileSystem::Delete(std::string pathname, std::string file_name) {
-     bool ret = false;
-     return ret;
+int FileSystem::Delete(std::string pathname, bool recursive) {
+    pathname = root_path + pathname;
+    DeleteFilesInDirectory(pathname, recursive);
+    return 0;
 }
 
 void FileSystem::GenerateUuid(char *uuid_str) {

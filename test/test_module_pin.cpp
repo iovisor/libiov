@@ -38,7 +38,6 @@ using namespace iov;
 
 TEST_CASE("test save local event/table fd to filesystem", "[module_pin]") {
   char *uuid_str = NULL;
-  const char *file_path;
   int fd;
   FileSystem fs;
   string path = ModulePath;
@@ -56,23 +55,20 @@ TEST_CASE("test save local event/table fd to filesystem", "[module_pin]") {
   fs.GenerateUuid(uuid_str);
 
   path.append(uuid_str);
-  file_path = path.c_str();
-  REQUIRE(mkdir(file_path, S_IRWXU) == 0);
+  REQUIRE(mkdir(path.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH)) == 0);
 
-  deleteFile << file_path;
+  deleteFile << path.c_str();
 
   path.append(ModuleEventPath);
-  file_path = path.c_str();
-  REQUIRE(mkdir(file_path, S_IRWXU) == 0);
+  REQUIRE(mkdir(path.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH)) == 0);
 
   fd = mod->GetFileDescriptor();
 
-  REQUIRE(fs.Save(file_path, "foo", fd) == 0);
+  REQUIRE(fs.Save(path.c_str(), "foo", fd) == 0);
 
   path.append("foo");
-  file_path = path.c_str();
 
-  moduleFile << file_path;
+  moduleFile << path.c_str();
   delete[] uuid_str;
   moduleFile.close();
   deleteFile.close();

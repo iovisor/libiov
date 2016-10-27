@@ -17,12 +17,9 @@
 #include <memory>
 #include <vector>
 
-#include <iostream>
-#include <fstream>
 #include <libiov.h>
 #include "libiov/command.h"
 #include "libiov/module.h"
-#include <uuid/uuid.h>
 #include "libiov/filesystem.h"
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
@@ -36,17 +33,24 @@ using std::vector;
 using std::unique_ptr;
 using namespace iov;
 
-TEST_CASE("test get local event/table fd to filesystem", "[module_get]") {
+TEST_CASE("test show event", "[module_show_event]") {
   std::string text;
   FileSystem fs;
+  std::vector<string> files;
+
   string del_module = "rm -r -f ";
-  std::ifstream moduleFile;
+  std::ifstream deleteFile;
 
-  moduleFile.open("/var/tmp/module.txt");
+  deleteFile.open("/var/tmp/delete.txt");
  
-  getline(moduleFile,text);
-  moduleFile.close();
+  getline(deleteFile,text);
+  deleteFile.close();
 
-  REQUIRE(fs.Open(text.c_str()) > 0);
+  fs.Show("modules", files);
+  REQUIRE ( files[0] == "foo");
 
+  fs.Delete("modules", true); 
+  //del_module.append(text);
+  //REQUIRE(system(del_module.c_str()) == 0);
+ 
 }

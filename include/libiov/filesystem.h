@@ -17,15 +17,17 @@
 
 #pragma once
 
+#include <dirent.h>
 #include <sys/stat.h>
 #include <future>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <uuid/uuid.h>
 
 #include "libiov/types.h"
 
-#define LibiovRootPath    "/sys/fs/bpf/libiov"
+#define LibiovRootPath    "/sys/fs/bpf/libiov/"
 #define GlobalTablePath   "/sys/fs/bpf/libiov/tables/"
 #define ModulePath        "/sys/fs/bpf/libiov/modules/"
 
@@ -53,13 +55,20 @@ class FileSystem {
   // State is a list of tables local to the IOModule
   // Libiov has the metadata for each table under state/
 
+  void ProcessEntry(std::string directory, std::vector<std::string> &files);
+  void ProcessEntity(struct dirent* entity, std::vector<std::string> &files);
+  void ProcessFile(std::string file, std::vector<std::string> &files);
+  bool dirExists(std::string dir_path);
+  int DeleteFilesInDirectory(std::string dirpath, bool recursive);
+  std::string root_path; 
+ 
  public:
   FileSystem();
   ~FileSystem();
   int Save(std::string pathname, std::string file_name, int fd);
   int Open(std::string pathname);
-  std::vector<std::string> Show(std::string pathname);
-  bool Delete(std::string pathname, std::string file_name);
+  void Show(std::string pathname, std::vector<std::string> &files);
+  int Delete(std::string pathname, bool recursive);
   void GenerateUuid(char *uuid_str);
 };
 } // namespace iov
