@@ -50,7 +50,5 @@ TEST_CASE("test show event", "[module_show_event]") {
   REQUIRE ( files[0] == "foo");
 
   fs.Delete("modules", true); 
-  //del_module.append(text);
-  //REQUIRE(system(del_module.c_str()) == 0);
  
 }
