@@ -21,9 +21,6 @@
 #include "libiov/command.h"
 #include "libiov/module.h"
 #include "libiov/filesystem.h"
-#include <bcc/bpf_common.h>
-#include <bcc/bpf_module.h>
-#include <bcc/libbpf.h>
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -33,18 +30,19 @@ using std::vector;
 using std::unique_ptr;
 using namespace iov;
 
-TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
+TEST_CASE("test table loading and saving", "[module_table_pin]") {
   char *uuid_str = NULL;
   int fd;
   FileSystem fs;
   string path = ModulePath;
-  string text = "int foo(void *ctx) { return 0; }";
-  std::ofstream moduleFile;
+  std::ofstream tableFile;
+  string text = "BPF_TABLE(\"hash\", u32, u32, num_ports, 1);";
 
-  moduleFile.open("/var/tmp/module.txt");
+  tableFile.open("/var/tmp/table.txt");
 
   auto mod = unique_ptr<IOModule>(new IOModule());
-  REQUIRE(mod->Init(std::move(text), IOModule::NET_FORWARD).get() == true);
+
+  REQUIRE(mod->Init(std::move(text), IOModule::NET_POLICY).get() == true);
 
   uuid_str = new char[100];
   fs.GenerateUuid(uuid_str);
@@ -52,16 +50,17 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
   path.append(uuid_str);
   REQUIRE(mkdir(path.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH)) == 0);
 
-  path.append(ModuleEventPath);
+  path.append(StatePath);
   REQUIRE(mkdir(path.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH)) == 0);
 
   fd = mod->GetFileDescriptor();
 
-  REQUIRE(fs.Save(path.c_str(), "foo", fd) == 0);
+  REQUIRE(fs.Save(path.c_str(), "num_ports", fd) == 0);
 
-  path.append("foo");
+  path.append("num_ports");
 
-  moduleFile << path.c_str();
+  tableFile << path.c_str();
   delete[] uuid_str;
-  moduleFile.close();
+  tableFile.close();
+
 }

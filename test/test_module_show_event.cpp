@@ -38,14 +38,6 @@ TEST_CASE("test show event", "[module_show_event]") {
   FileSystem fs;
   std::vector<string> files;
 
-  string del_module = "rm -r -f ";
-  std::ifstream deleteFile;
-
-  deleteFile.open("/var/tmp/delete.txt");
- 
-  getline(deleteFile,text);
-  deleteFile.close();
-
   fs.Show("modules", files);
   REQUIRE ( files[0] == "foo");
 

@@ -33,35 +33,13 @@ using std::vector;
 using std::unique_ptr;
 using namespace iov;
 
-TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
-  char *uuid_str = NULL;
-  int fd;
+TEST_CASE("test show table", "[module_show_table]") {
+  std::string text;
   FileSystem fs;
-  string path = ModulePath;
-  string text = "int foo(void *ctx) { return 0; }";
-  std::ofstream moduleFile;
+  std::vector<string> files;
 
-  moduleFile.open("/var/tmp/module.txt");
-
-  auto mod = unique_ptr<IOModule>(new IOModule());
-  REQUIRE(mod->Init(std::move(text), IOModule::NET_FORWARD).get() == true);
-
-  uuid_str = new char[100];
-  fs.GenerateUuid(uuid_str);
-
-  path.append(uuid_str);
-  REQUIRE(mkdir(path.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH)) == 0);
-
-  path.append(ModuleEventPath);
-  REQUIRE(mkdir(path.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH)) == 0);
-
-  fd = mod->GetFileDescriptor();
-
-  REQUIRE(fs.Save(path.c_str(), "foo", fd) == 0);
-
-  path.append("foo");
-
-  moduleFile << path.c_str();
-  delete[] uuid_str;
-  moduleFile.close();
+  fs.Show("modules", files);
+  REQUIRE ( files[0] == "num_ports");
+  fs.Delete("modules", true); 
+ 
 }

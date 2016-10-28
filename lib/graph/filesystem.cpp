@@ -80,7 +80,6 @@ void FileSystem::ProcessEntry(std::string directory,
        //set the new path for the content of the directory
        root_path = dirToOpen + "/";
     }
-
     auto dir = opendir(dirToOpen.c_str());
 
     if(NULL == dir)
@@ -113,7 +112,6 @@ void FileSystem::ProcessEntity(struct dirent* entity,
         {
             return;
         }
-
         //it's an directory so process it
         ProcessEntry(std::string(entity->d_name), files);
         return;

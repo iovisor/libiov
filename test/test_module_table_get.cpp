@@ -20,6 +20,10 @@
 #include <libiov.h>
 #include "libiov/command.h"
 #include "libiov/module.h"
+#include "libiov/filesystem.h"
+#include <bcc/bpf_common.h>
+#include <bcc/bpf_module.h>
+#include <bcc/libbpf.h>
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -29,8 +33,17 @@ using std::vector;
 using std::unique_ptr;
 using namespace iov;
 
-TEST_CASE("test table loading", "[module_table]") {
-  string text = "BPF_TABLE(\"hash\", u32, u32, num_ports, 1);";
-  auto mod = unique_ptr<IOModule>(new IOModule());
-  REQUIRE(mod->Init(std::move(text), IOModule::NET_POLICY).get() == true);
+TEST_CASE("test get local table fd from filesystem", "[module_table_get]") {
+  std::string text;
+  FileSystem fs;
+  std::ifstream tableFile;
+  int ret;
+
+  tableFile.open("/var/tmp/table.txt");
+ 
+  getline(tableFile,text);
+  tableFile.close();
+
+  REQUIRE(fs.Open(text.c_str()) > 0);
+
 }
