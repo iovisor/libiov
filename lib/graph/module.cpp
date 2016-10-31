@@ -61,14 +61,6 @@ future<bool> IOModule::Load(ModuleType type) {
           nullptr, 0)));
       if (*prog_ >= 0)
         return true;
-    case NET_POLICY: // Temporary to create a map
-      prog_.reset(new FileDesc(bpf_create_map(BPF_MAP_TYPE_HASH,
-          mod_->table_key_size(0),
-          mod_->table_leaf_size(0),
-          mod_->table_max_entries(0))));
-      if (*prog_ >= 0)
-        return true;
-
     default: {}
     }
     return false;
