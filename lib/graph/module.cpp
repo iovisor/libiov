@@ -21,9 +21,9 @@
 #include <bcc/libbpf.h>
 
 #include "libiov/internal/types.h"
+#include "libiov/table.h"
 #include "libiov/module.h"
 #include "libiov/prog.h"
-#include "libiov/table.h"
 #include "libiov/filesystem.h"
 #include "libiov/event.h"
 
@@ -63,8 +63,8 @@ future<bool> IOModule::Load(ModuleType type) {
         return true;
     case NET_POLICY: // Temporary to create a map
       prog_.reset(new FileDesc(bpf_create_map(BPF_MAP_TYPE_HASH,
-          mod_->table_leaf_size(0),
           mod_->table_key_size(0),
+          mod_->table_leaf_size(0),
           mod_->table_max_entries(0))));
       if (*prog_ >= 0)
         return true;

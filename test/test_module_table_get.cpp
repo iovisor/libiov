@@ -21,6 +21,7 @@
 #include "libiov/command.h"
 #include "libiov/module.h"
 #include "libiov/filesystem.h"
+#include "libiov/table.h"
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
 #include <bcc/libbpf.h>
@@ -45,5 +46,4 @@ TEST_CASE("test get local table fd from filesystem", "[module_table_get]") {
   tableFile.close();
 
   REQUIRE(fs.Open(text.c_str()) > 0);
-
 }

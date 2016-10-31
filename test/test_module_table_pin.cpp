@@ -17,10 +17,12 @@
 #include <memory>
 #include <vector>
 
+#include <linux/bpf.h>
 #include <libiov.h>
 #include "libiov/command.h"
 #include "libiov/module.h"
 #include "libiov/filesystem.h"
+#include "libiov/table.h"
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -34,15 +36,14 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   char *uuid_str = NULL;
   int fd;
   FileSystem fs;
+  Table table;
   string path = ModulePath;
   std::ofstream tableFile;
   string text = "BPF_TABLE(\"hash\", u32, u32, num_ports, 1);";
 
   tableFile.open("/var/tmp/table.txt");
 
-  auto mod = unique_ptr<IOModule>(new IOModule());
-
-  REQUIRE(mod->Init(std::move(text), IOModule::NET_POLICY).get() == true);
+  fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(uint32_t), 1);
 
   uuid_str = new char[100];
   fs.GenerateUuid(uuid_str);
@@ -52,8 +53,6 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
 
   path.append(StatePath);
   REQUIRE(mkdir(path.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH)) == 0);
-
-  fd = mod->GetFileDescriptor();
 
   REQUIRE(fs.Save(path.c_str(), "num_ports", fd) == 0);
 

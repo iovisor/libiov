@@ -28,6 +28,9 @@
 //Requires the following module to be install
 //apt-get install uuid uuid-dev
 
+namespace iov {
+
+class Table;
 
 class Module {
 
@@ -66,3 +69,4 @@ class Module {
   std::vector<Event> LocalEvent();
 
 };
+} // end namespace iov
