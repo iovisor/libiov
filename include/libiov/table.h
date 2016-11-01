@@ -65,10 +65,13 @@ class Table {
  int Insert(bpf_map_type map_type, int key_size, int leaf_size, int max_entries); 
  // Api to Update an element of the table
  int Update(int fd, void *key, void *value, uint64_t flags);
+
  // Api to Delete an element of the table
  int Delete(int fd, void *key);
+
  // Api to  Lookup an element of the table (counters etc...)
  int Lookup(int fd, void *key, void *value);
+
  // Api to get the next key after the key of the map in fd
  int GetKey(int fd, void *key, void *next_key);
 };
