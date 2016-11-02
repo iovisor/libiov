@@ -28,7 +28,7 @@
 #include "libiov/types.h"
 
 namespace iov {
-  class IOModule;
+class IOModule;
 
 class Table {
 

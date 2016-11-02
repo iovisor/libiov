@@ -71,4 +71,8 @@ int IOModule::GetFileDescriptor() {
   FileDesc *fd = prog_.get();
   return *fd;
 }
+
+ebpf::BPFModule *IOModule::GetBpfModule() const {
+  return mod_.get();
+}
 }  // namespace iov

@@ -46,6 +46,7 @@ class IOModule {
   ~IOModule();
   std::future<bool> Init(std::string &&text, ModuleType type);
   int GetFileDescriptor();
+  ebpf::BPFModule *GetBpfModule() const;
 };
 
 }  // namespace iov
