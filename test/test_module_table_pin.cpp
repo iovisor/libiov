@@ -76,10 +76,7 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
 
   tableFile << path.c_str();
 
-  string table_key = bpf_mod->table_key_desc(0);
-  string table_leaf = bpf_mod->table_leaf_desc(0);
-  size_t key_size = bpf_mod->table_key_size(0);
-  size_t leaf_size = bpf_mod->table_leaf_size(0);
+  meta.Update(bpf_mod);
 
   fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
 
@@ -90,29 +87,8 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
 
   metaFile << metadata.c_str();
 
-  meta.item.key_desc_size = table_key.length();
-  meta.item.leaf_desc_size = table_leaf.length();
-  meta.item.key_size = key_size;
-  meta.item.leaf_size = leaf_size;
-
   key = 0;
   REQUIRE(table.Update(fd, &key, &meta.item, BPF_ANY) == 0);
-
-  fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), table_key.length(), 1);
-
-  string f_key_desc = bpf_mod->table_name(0);
-  f_key_desc.append(KeyDesc);
-  REQUIRE(fs.Save(key_leaf_path.c_str(), f_key_desc.c_str(), fd) == 0);
-
-  REQUIRE(table.Update(fd, &key, (void *)table_key.c_str(), BPF_ANY) == 0);
-
-  fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), table_leaf.length(), 1);
-
-  string f_leaf_desc = bpf_mod->table_name(0);
-  f_leaf_desc.append(LeafDesc);
-  REQUIRE(fs.Save(key_leaf_path.c_str(), f_leaf_desc.c_str(), fd) == 0);
-
-  REQUIRE(table.Update(fd, &key, (void *)table_leaf.c_str(), BPF_ANY) == 0);
 
   delete[] uuid_str;
   tableFile.close();

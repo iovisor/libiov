@@ -31,10 +31,12 @@ namespace iov {
 class IOModule;
 
  struct descr {
-   uint32_t key_size;
-   uint32_t leaf_size;
+   size_t key_size;
+   size_t leaf_size;
    uint32_t key_desc_size;
    uint32_t leaf_desc_size;
+   std::string key_desc;
+   std::string leaf_desc;
  };
 
 class MetaData {
@@ -45,6 +47,6 @@ public:
 
  MetaData();
  ~MetaData();
-
+ void Update(ebpf::BPFModule *bpf_mod);
 };
 } //namespace iov

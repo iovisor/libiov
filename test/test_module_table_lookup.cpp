@@ -61,23 +61,8 @@ TEST_CASE("test lookup local table element", "[module_table_lookup]") {
   key = 0;
   REQUIRE((ret = table.Lookup(meta_fd, &key, &meta.item)) == 0);
 
-  key_desc_path = m_data;
-  key_desc_path.append(KeyDesc);
-  REQUIRE((key_fd = fs.Open(key_desc_path.c_str())) > 0);
-
-  leaf_desc_path = m_data;
-  leaf_desc_path.append(LeafDesc);
-  REQUIRE((leaf_fd = fs.Open(leaf_desc_path.c_str())) > 0);
-
-  key = 0;
-  std::string key_desc(meta.item.key_desc_size, '\0');
-  REQUIRE((ret = table.Lookup(key_fd, &key, (void *)key_desc.c_str())) == 0);
-
-  std::string leaf_desc(meta.item.leaf_desc_size, '\0');
-  REQUIRE((ret = table.Lookup(leaf_fd, &key, (void *)leaf_desc.c_str())) == 0);
-
-  std::cout << "KEY DESC: " << key_desc << std::endl;
-  std::cout << "LEAF DESC: " << leaf_desc << std::endl;
+  std::cout << "KEY DESC: " << meta.item.key_desc << std::endl;
+  std::cout << "LEAF DESC: " << meta.item.leaf_desc << std::endl;
 
   std::string key_test(meta.item.key_size, '\0');
   std::string next_key_test(meta.item.key_size, '\0');

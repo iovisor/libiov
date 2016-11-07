@@ -52,24 +52,10 @@ TEST_CASE("test lookup local metadata table element", "[module_table_lookup_meta
   key = 0;
   REQUIRE((ret = table.Lookup(fd, &key, &meta.item)) == 0);
 
-  std::string key_desc_path = text;
-  key_desc_path.append(KeyDesc);
-  REQUIRE((fd = fs.Open(key_desc_path.c_str())) > 0);
-  std::cout << "KEY SIZE: " << meta.item.key_desc_size << std::endl;
-
-  std::string key_desc(meta.item.key_desc_size, '\0');
-  REQUIRE((ret = table.Lookup(fd, &key, (void *)key_desc.c_str())) == 0);
-  std::cout << "KEY LEN: " << key_desc.length() << std::endl;
-  std::cout << "KEY DESC: " << key_desc << std::endl;
-
-  std::string leaf_desc_path = text;
-  leaf_desc_path.append(LeafDesc);
-  REQUIRE((fd = fs.Open(leaf_desc_path.c_str())) > 0);
-  std::cout << "leaf SIZE: " << meta.item.leaf_desc_size << std::endl;
-
-  std::string leaf_desc(meta.item.leaf_desc_size, '\0');
-  REQUIRE((ret = table.Lookup(fd, &key, (void *)leaf_desc.c_str())) == 0);
-  std::cout << "LEAF LEN: " << leaf_desc.length() << std::endl;
-  std::cout << "LEAF DESC: " << leaf_desc << std::endl;
-  
+  std::cout << "KEY DESC SIZE: " << meta.item.key_desc_size << std::endl;
+  std::cout << "KEY DESC: " << meta.item.key_desc << std::endl;
+  std::cout << "KEY LENGTH: " << meta.item.key_size << std::endl;
+  std::cout << "LEAF DESC SIZE: " << meta.item.leaf_desc_size << std::endl;
+  std::cout << "LEAF DESC: " << meta.item.leaf_desc << std::endl;
+  std::cout << "LEAF LENGTH: " << meta.item.leaf_size << std::endl;
 }
