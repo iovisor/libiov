@@ -14,36 +14,37 @@
  * limitations under the License.
  */
 
-#include <memory>
-#include <vector>
+#pragma once
 
-#include <libiov.h>
-#include "libiov/command.h"
-#include "libiov/module.h"
-#include "libiov/filesystem.h"
-#include "libiov/table.h"
+#include <future>
+#include <string>
+#include <iostream>
+#include <linux/bpf.h>
+
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
 #include <bcc/libbpf.h>
 
-#define CATCH_CONFIG_MAIN
-#include "catch.hpp"
+#include "libiov/types.h"
 
-using std::string;
-using std::vector;
-using std::unique_ptr;
-using namespace iov;
+namespace iov {
+class IOModule;
 
-TEST_CASE("test get local table fd from filesystem", "[module_table_get]") {
-  std::string text;
-  FileSystem fs;
-  std::ifstream tableFile;
-  int ret;
+ struct descr {
+   uint32_t key_size;
+   uint32_t leaf_size;
+   uint32_t key_desc_size;
+   uint32_t leaf_desc_size;
+ };
 
-  tableFile.open("/var/tmp/table.txt");
- 
-  getline(tableFile,text);
-  tableFile.close();
+class MetaData {
 
-  REQUIRE(fs.Open(text.c_str()) > 0);
-}
+public:
+
+ struct descr item;
+
+ MetaData();
+ ~MetaData();
+
+};
+} //namespace iov

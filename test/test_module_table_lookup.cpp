@@ -21,6 +21,7 @@
 #include "libiov/command.h"
 #include "libiov/module.h"
 #include "libiov/filesystem.h"
+#include "libiov/metadata.h"
 #include "libiov/table.h"
 
 #define CATCH_CONFIG_MAIN
@@ -32,21 +33,62 @@ using std::unique_ptr;
 using namespace iov;
 
 TEST_CASE("test lookup local table element", "[module_table_lookup]") {
-  std::string text;
+  std::string f_table, m_data;
   FileSystem fs;
-  std::ifstream tableFile;
-  int fd = 0;
+  std::ifstream tableFile, metaFile;
+  int table_fd = 0;
+  int meta_fd = 0;
+  int key_fd = 0;
+  int leaf_fd = 0;
   int ret = 0;
-  uint32_t key = 0;
+  uint32_t key;
   uint32_t value;
   Table table;
+  MetaData meta;
+  std::string key_desc_path;
+  std::string leaf_desc_path;
 
   tableFile.open("/var/tmp/table.txt");
- 
-  getline(tableFile,text);
+  metaFile.open("/var/tmp/meta.txt"); 
+  getline(tableFile,f_table);
+  getline(metaFile,m_data);
   tableFile.close();
+  metaFile.close();
 
-  REQUIRE((fd = fs.Open(text.c_str())) > 0);
-  REQUIRE((ret = table.Lookup(fd, &key, &value)) == 0);
-  REQUIRE(value == 3);
+  REQUIRE((table_fd = fs.Open(f_table.c_str())) > 0);
+  REQUIRE((meta_fd = fs.Open(m_data.c_str())) > 0);
+
+  key = 0;
+  REQUIRE((ret = table.Lookup(meta_fd, &key, &meta.item)) == 0);
+
+  key_desc_path = m_data;
+  key_desc_path.append(KeyDesc);
+  REQUIRE((key_fd = fs.Open(key_desc_path.c_str())) > 0);
+
+  leaf_desc_path = m_data;
+  leaf_desc_path.append(LeafDesc);
+  REQUIRE((leaf_fd = fs.Open(leaf_desc_path.c_str())) > 0);
+
+  key = 0;
+  std::string key_desc(meta.item.key_desc_size, '\0');
+  REQUIRE((ret = table.Lookup(key_fd, &key, (void *)key_desc.c_str())) == 0);
+
+  std::string leaf_desc(meta.item.leaf_desc_size, '\0');
+  REQUIRE((ret = table.Lookup(leaf_fd, &key, (void *)leaf_desc.c_str())) == 0);
+
+  std::cout << "KEY DESC: " << key_desc << std::endl;
+  std::cout << "LEAF DESC: " << leaf_desc << std::endl;
+
+  std::string key_test(meta.item.key_size, '\0');
+  std::string next_key_test(meta.item.key_size, '\0');
+
+  struct packet_ {
+    uint64_t rx_pkt;
+    uint64_t tx_pkt;
+  } packet;
+
+  REQUIRE((ret = table.GetKey(table_fd, (void *)key_test.c_str(), (void *)next_key_test.c_str())) == 0);
+  REQUIRE((ret = table.Lookup(table_fd, (void *)next_key_test.c_str(), &packet)) == 0);
+  std::cout << "PACKET RX: " << packet.rx_pkt << std::endl;
+  std::cout << "PACKET TX: " << packet.tx_pkt << std::endl;
 }

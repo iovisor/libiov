@@ -14,35 +14,24 @@
  * limitations under the License.
  */
 
-#include <memory>
-#include <vector>
-
-#include <libiov.h>
-#include "libiov/command.h"
+#include <string.h>
+#include "libiov/internal/types.h"
 #include "libiov/module.h"
+#include "libiov/prog.h"
+#include "libiov/metadata.h"
+#include "libiov/table.h"
 #include "libiov/filesystem.h"
-#include <bcc/bpf_common.h>
-#include <bcc/bpf_module.h>
-#include <bcc/libbpf.h>
+#include "libiov/event.h"
 
-#define CATCH_CONFIG_MAIN
-#include "catch.hpp"
-
+using std::future;
+using std::promise;
 using std::string;
-using std::vector;
-using std::unique_ptr;
-using namespace iov;
+using namespace iov::internal;
 
-TEST_CASE("test get local event fd from filesystem", "[module_get]") {
-  std::string text;
-  FileSystem fs;
-  std::ifstream moduleFile;
+namespace iov {
 
-  moduleFile.open("/var/tmp/module.txt");
- 
-  getline(moduleFile,text);
-  moduleFile.close();
+MetaData::MetaData() {}
+MetaData::~MetaData() {}
 
-  REQUIRE(fs.Open(text.c_str()) > 0);
+} //End of namespace iov
 
-}

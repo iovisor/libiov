@@ -36,9 +36,16 @@ TEST_CASE("test update local table element", "[module_update_get]") {
   FileSystem fs;
   std::ifstream tableFile;
   int fd = 0;
-  uint32_t key = 0;
-  uint32_t value;
   Table table;
+  struct host_ {
+    uint64_t mac;
+    int ifindex;
+    int pad;
+  }host;
+  struct packet_ {
+    uint64_t rx_pkt;
+    uint64_t tx_pkt;
+  } packet;
 
   tableFile.open("/var/tmp/table.txt");
  
@@ -46,8 +53,10 @@ TEST_CASE("test update local table element", "[module_update_get]") {
   tableFile.close();
 
   REQUIRE((fd = fs.Open(text.c_str())) > 0);
-  key = 0;
-  value = 3;
-  REQUIRE(table.Update(fd, &key, &value, BPF_ANY) == 0);
-
+  host.mac = 123;
+  host.ifindex = 456;
+  host.pad = 0;
+  packet.rx_pkt = 3;
+  packet.tx_pkt = 4;
+  REQUIRE(table.Update(fd, &host, &packet, BPF_ANY) == 0);
 }

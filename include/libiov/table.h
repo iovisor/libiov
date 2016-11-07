@@ -32,6 +32,8 @@ class IOModule;
 
 class Table {
 
+public:
+
  // Name of the table
  std::string table_name;
 
@@ -54,7 +56,6 @@ class Table {
  // specifically types for key and value
  int table_desc_fd;
 
- public:
   Table();
   ~Table();
 
@@ -63,6 +64,7 @@ class Table {
 
  // Api to Insert elements of the table
  int Insert(bpf_map_type map_type, int key_size, int leaf_size, int max_entries); 
+
  // Api to Update an element of the table
  int Update(int fd, void *key, void *value, uint64_t flags);
 

@@ -22,6 +22,7 @@
 #include "libiov/command.h"
 #include "libiov/module.h"
 #include "libiov/filesystem.h"
+#include "libiov/metadata.h"
 #include "libiov/table.h"
 
 #define CATCH_CONFIG_MAIN
@@ -35,15 +36,26 @@ using namespace iov;
 TEST_CASE("test table loading and saving", "[module_table_pin]") {
   char *uuid_str = NULL;
   int fd;
+  uint32_t key;
   FileSystem fs;
   Table table;
+  IOModule module;
+  MetaData meta;
+  ebpf::BPFModule *bpf_mod;
   string path = ModulePath;
   std::ofstream tableFile;
-  string text = "BPF_TABLE(\"hash\", u32, u32, num_ports, 1);";
+  std::ofstream metaFile;
+  string text = "struct host { u64 mac; int ifindex; int pad; }; struct packet { u64 rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", struct host, struct packet, num_ports, 1);";
 
   tableFile.open("/var/tmp/table.txt");
+  metaFile.open("/var/tmp/meta.txt");
 
-  fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(uint32_t), 1);
+  module.Init(std::move(text), IOModule::NET_POLICY);
+
+  bpf_mod = module.GetBpfModule();
+   
+  fd = table.Insert(BPF_MAP_TYPE_HASH, bpf_mod->table_key_size(0), 
+                    bpf_mod->table_leaf_size(0), 1);
 
   uuid_str = new char[100];
   fs.GenerateUuid(uuid_str);
@@ -54,12 +66,55 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   path.append(StatePath);
   REQUIRE(mkdir(path.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH)) == 0);
 
-  REQUIRE(fs.Save(path.c_str(), "num_ports", fd) == 0);
+  REQUIRE(fs.Save(path.c_str(), bpf_mod->table_name(0), fd) == 0);
 
-  path.append("num_ports");
+  string metadata = path;  
+  metadata.append(MetadataPath);
+  REQUIRE(mkdir(metadata.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH)) == 0);
+
+  path.append(bpf_mod->table_name(0));
 
   tableFile << path.c_str();
+
+  string table_key = bpf_mod->table_key_desc(0);
+  string table_leaf = bpf_mod->table_leaf_desc(0);
+  size_t key_size = bpf_mod->table_key_size(0);
+  size_t leaf_size = bpf_mod->table_leaf_size(0);
+
+  fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
+
+  REQUIRE(fs.Save(metadata.c_str(), bpf_mod->table_name(0), fd) == 0);
+
+  string key_leaf_path = metadata;
+  metadata.append(bpf_mod->table_name(0));
+
+  metaFile << metadata.c_str();
+
+  meta.item.key_desc_size = table_key.length();
+  meta.item.leaf_desc_size = table_leaf.length();
+  meta.item.key_size = key_size;
+  meta.item.leaf_size = leaf_size;
+
+  key = 0;
+  REQUIRE(table.Update(fd, &key, &meta.item, BPF_ANY) == 0);
+
+  fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), table_key.length(), 1);
+
+  string f_key_desc = bpf_mod->table_name(0);
+  f_key_desc.append(KeyDesc);
+  REQUIRE(fs.Save(key_leaf_path.c_str(), f_key_desc.c_str(), fd) == 0);
+
+  REQUIRE(table.Update(fd, &key, (void *)table_key.c_str(), BPF_ANY) == 0);
+
+  fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), table_leaf.length(), 1);
+
+  string f_leaf_desc = bpf_mod->table_name(0);
+  f_leaf_desc.append(LeafDesc);
+  REQUIRE(fs.Save(key_leaf_path.c_str(), f_leaf_desc.c_str(), fd) == 0);
+
+  REQUIRE(table.Update(fd, &key, (void *)table_leaf.c_str(), BPF_ANY) == 0);
+
   delete[] uuid_str;
   tableFile.close();
-
+  metaFile.close();
 }

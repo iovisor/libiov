@@ -33,8 +33,9 @@
 
 #define ModuleEventPath   "/events/"
 #define StatePath         "/state/"  
-#define MetadataPath      "/libiov/"
-
+#define MetadataPath      "metadata/"
+#define KeyDesc           "_key_desc"
+#define LeafDesc          "_leaf_desc" 
 
 namespace iov {
   class IOModule;
