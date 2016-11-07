@@ -220,4 +220,8 @@ void FileSystem::GenerateUuid(char *uuid_str) {
      uuid_generate( (unsigned char *)&id1 );
      uuid_unparse(id1, uuid_str);
 }
+
+void FileSystem::CreatePath(std::string path) {
+  mkdir(path.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH));
+}
 } // namespace iov

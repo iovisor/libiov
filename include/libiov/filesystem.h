@@ -71,5 +71,6 @@ class FileSystem {
   void Show(std::string pathname, std::vector<std::string> &files);
   int Delete(std::string pathname, bool recursive);
   void GenerateUuid(char *uuid_str);
+  void CreatePath(std::string path);
 };
 } // namespace iov

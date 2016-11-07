@@ -50,10 +50,10 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
   fs.GenerateUuid(uuid_str);
 
   path.append(uuid_str);
-  REQUIRE(mkdir(path.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH)) == 0);
+  fs.CreatePath(path);
 
   path.append(ModuleEventPath);
-  REQUIRE(mkdir(path.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH)) == 0);
+  fs.CreatePath(path);
 
   fd = mod->GetFileDescriptor();
 
