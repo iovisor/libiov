@@ -75,6 +75,8 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   path.append(bpf_mod->table_name(0));
 
   tableFile << path.c_str();
+  string table_key = bpf_mod->table_key_desc(0);
+  string table_leaf = bpf_mod->table_leaf_desc(0);
 
   meta.Update(bpf_mod);
 
@@ -89,6 +91,22 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
 
   key = 0;
   REQUIRE(table.Update(fd, &key, &meta.item, BPF_ANY) == 0);
+
+  fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), table_key.length(), 1);
+
+  string f_key_desc = bpf_mod->table_name(0);
+  f_key_desc.append(KeyDesc);
+  REQUIRE(fs.Save(key_leaf_path.c_str(), f_key_desc.c_str(), fd) == 0);
+
+  REQUIRE(table.Update(fd, &key, (void *)table_key.c_str(), BPF_ANY) == 0);
+
+  fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), table_leaf.length(), 1);
+
+  string f_leaf_desc = bpf_mod->table_name(0);
+  f_leaf_desc.append(LeafDesc);
+  REQUIRE(fs.Save(key_leaf_path.c_str(), f_leaf_desc.c_str(), fd) == 0);
+
+  REQUIRE(table.Update(fd, &key, (void *)table_leaf.c_str(), BPF_ANY) == 0);
 
   delete[] uuid_str;
   tableFile.close();

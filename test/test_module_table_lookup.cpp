@@ -61,9 +61,6 @@ TEST_CASE("test lookup local table element", "[module_table_lookup]") {
   key = 0;
   REQUIRE((ret = table.Lookup(meta_fd, &key, &meta.item)) == 0);
 
-  std::cout << "KEY DESC: " << meta.item.key_desc << std::endl;
-  std::cout << "LEAF DESC: " << meta.item.leaf_desc << std::endl;
-
   std::string key_test(meta.item.key_size, '\0');
   std::string next_key_test(meta.item.key_size, '\0');
 

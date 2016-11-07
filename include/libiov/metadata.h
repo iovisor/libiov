@@ -20,7 +20,7 @@
 #include <string>
 #include <iostream>
 #include <linux/bpf.h>
-
+#include <cstring>
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
 #include <bcc/libbpf.h>
@@ -35,8 +35,6 @@ class IOModule;
    size_t leaf_size;
    uint32_t key_desc_size;
    uint32_t leaf_desc_size;
-   std::string key_desc;
-   std::string leaf_desc;
  };
 
 class MetaData {

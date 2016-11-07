@@ -31,16 +31,17 @@ using namespace iov::internal;
 namespace iov {
 
 MetaData::MetaData() {}
-MetaData::~MetaData() {}
+MetaData::~MetaData() {
+}
 
 void MetaData::Update(ebpf::BPFModule *bpf_mod) {
-  item.key_desc = bpf_mod->table_key_desc(0);
+  std::string desc = bpf_mod->table_key_desc(0);
   item.key_size = bpf_mod->table_key_size(0);
-  item.key_desc_size = item.key_desc.length();
-  item.leaf_desc = bpf_mod->table_leaf_desc(0);
-  item.leaf_size = bpf_mod->table_leaf_size(0);
-  item.leaf_desc_size = item.leaf_desc.length();
+  item.key_desc_size = desc.length();
 
+  desc = bpf_mod->table_leaf_desc(0);
+  item.leaf_size = bpf_mod->table_leaf_size(0);
+  item.leaf_desc_size = desc.length();
 }
 } //End of namespace iov
 
