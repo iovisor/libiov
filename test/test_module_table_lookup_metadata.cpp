@@ -32,6 +32,14 @@ using std::vector;
 using std::unique_ptr;
 using namespace iov;
 
+bool replace(std::string& str, const std::string& from, const std::string& to) {
+    size_t start_pos = str.find(from);
+    if(start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
+
 TEST_CASE("test lookup local metadata table element", "[module_table_lookup_metadata]") {
   FileSystem fs;
   MetaData meta;
@@ -57,17 +65,18 @@ TEST_CASE("test lookup local metadata table element", "[module_table_lookup_meta
   std::cout << "LEAF DESC SIZE: " << meta.item.leaf_desc_size << std::endl;
   std::cout << "LEAF LENGTH: " << meta.item.leaf_size << std::endl;
 
-  std::string key_desc_path = text;
-  key_desc_path.append(KeyDesc);
-  REQUIRE((fd = fs.Open(key_desc_path.c_str())) > 0);
+  std::string key_text = text;
+  REQUIRE((replace(key_text, "_metadata", KeyDesc)) == true);
+
+  REQUIRE((fd = fs.Open(key_text.c_str())) > 0);
 
   std::string key_desc(meta.item.key_desc_size, '\0');
   REQUIRE((ret = table.Lookup(fd, &key, (void *)key_desc.c_str())) == 0);
   std::cout << "KEY DESC: " << key_desc << std::endl;
 
-  std::string leaf_desc_path = text;
-  leaf_desc_path.append(LeafDesc);
-  REQUIRE((fd = fs.Open(leaf_desc_path.c_str())) > 0);
+  string leaf_text = text;
+  REQUIRE((replace(leaf_text, "_metadata", LeafDesc)) == true);;
+  REQUIRE((fd = fs.Open(leaf_text.c_str())) > 0);
 
   std::string leaf_desc(meta.item.leaf_desc_size, '\0');
   REQUIRE((ret = table.Lookup(fd, &key, (void *)leaf_desc.c_str())) == 0);

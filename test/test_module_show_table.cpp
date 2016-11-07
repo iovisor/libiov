@@ -39,7 +39,6 @@ TEST_CASE("test show table", "[module_show_table]") {
   std::vector<string> files;
 
   fs.Show("modules", files);
-  REQUIRE ( files[0] == "num_ports");
   fs.Delete("modules", true); 
  
 }

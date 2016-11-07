@@ -130,6 +130,7 @@ void FileSystem::ProcessEntity(struct dirent* entity,
 void FileSystem::ProcessFile(std::string file,
                              std::vector<std::string> &files)
 {
+    std::cout << "FILE: " << file << std::endl;
     files.push_back(file);
 }
 

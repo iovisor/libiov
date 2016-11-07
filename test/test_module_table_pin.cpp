@@ -82,10 +82,12 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
 
   fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
 
-  REQUIRE(fs.Save(metadata.c_str(), bpf_mod->table_name(0), fd) == 0);
+  string file_name = bpf_mod->table_name(0);
+  file_name.append("_metadata"); 
+  REQUIRE(fs.Save(metadata.c_str(), file_name.c_str(), fd) == 0);
 
   string key_leaf_path = metadata;
-  metadata.append(bpf_mod->table_name(0));
+  metadata.append(file_name);
 
   metaFile << metadata.c_str();
 
