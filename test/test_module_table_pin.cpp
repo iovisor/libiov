@@ -45,7 +45,7 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   string path = ModulePath;
   std::ofstream tableFile;
   std::ofstream metaFile;
-  string text = "struct host { u64 mac; int ifindex; int pad; }; struct packet { u64 rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", struct host, struct packet, num_ports, 1);";
+  string text = "struct host { u64 mac; int ifindex; int pad;}; struct packet { u64 rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", struct host, struct packet, num_ports, 1);";
 
   tableFile.open("/var/tmp/table.txt");
   metaFile.open("/var/tmp/meta.txt");

@@ -16,7 +16,7 @@
 
 #include <memory>
 #include <vector>
-
+#include <arpa/inet.h>
 #include <libiov.h>
 #include "libiov/command.h"
 #include "libiov/module.h"
@@ -63,14 +63,16 @@ TEST_CASE("test lookup local table element", "[module_table_lookup]") {
 
   std::string key_test(meta.item.key_size, '\0');
   std::string next_key_test(meta.item.key_size, '\0');
-
+  std::string packet(meta.item.leaf_size, '\0');;
   struct packet_ {
     uint64_t rx_pkt;
     uint64_t tx_pkt;
-  } packet;
+  } test;
 
   REQUIRE((ret = table.GetKey(table_fd, (void *)key_test.c_str(), (void *)next_key_test.c_str())) == 0);
-  REQUIRE((ret = table.Lookup(table_fd, (void *)next_key_test.c_str(), &packet)) == 0);
-  std::cout << "PACKET RX: " << packet.rx_pkt << std::endl;
-  std::cout << "PACKET TX: " << packet.tx_pkt << std::endl;
+  REQUIRE((ret = table.Lookup(table_fd, (void *)next_key_test.c_str(), (void *)packet.c_str())) == 0);
+
+  memcpy(&test, packet.data(), meta.item.leaf_size);
+  REQUIRE(test.rx_pkt == 25);
+  REQUIRE(test.tx_pkt == 30);
 }
