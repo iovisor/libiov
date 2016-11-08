@@ -33,7 +33,7 @@ using std::vector;
 using std::unique_ptr;
 using namespace iov;
 
-TEST_CASE("test show table", "[module_show_table]") {
+TEST_CASE("test show file", "[module_show_file]") {
   std::string text;
   FileSystem fs;
   std::vector<string> files;
