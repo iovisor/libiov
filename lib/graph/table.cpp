@@ -15,16 +15,25 @@
  */
 
 #include <string.h>
+#include <memory>
+#include <vector>
+#include <arpa/inet.h>
+#include <iostream>     // std::cout, std::endl
+#include <iomanip>      // std::setfill, std::set
 #include "libiov/internal/types.h"
 #include "libiov/module.h"
 #include "libiov/prog.h"
 #include "libiov/table.h"
 #include "libiov/filesystem.h"
+#include "libiov/metadata.h"
 #include "libiov/event.h"
 
 using std::future;
 using std::promise;
 using std::string;
+using std::vector;
+using std::unique_ptr;
+
 using namespace iov::internal;
 
 namespace iov {
@@ -77,6 +86,76 @@ int Table::GetKey(int fd, void *key, void *next_key) {
      int ret;
      ret =  bpf_get_next_key(fd, key, next_key);
      return ret;
+}
+
+int Table::GetTableElem(std::map<std::string, std::string> &item) {
+     //Open Metadata
+     //Open Key desc optional for now
+     //Open Leaf desc optional for now
+     //lookup all the keys and return them along with values
+     int ret = 0;
+     MetaData meta;
+     int key_meta;
+
+     key_meta = 0;
+     ret = Lookup(table_desc_fd, &key_meta, &meta.item);
+     if (ret != 0) {
+         return ret;
+     }
+
+     std::string key(meta.item.key_size, '\0');
+     std::string next_key(meta.item.key_size, '\0');
+     std::string leaf(meta.item.leaf_size, '\0');;
+
+     for (;;) {
+        ret = GetKey(table_fd, 
+                     (void *)key.c_str(), 
+                     (void *)next_key.c_str());
+
+        if (ret != 0) {
+            // Should return a value for this
+            break;
+        }
+
+        ret = Lookup(table_fd, 
+                     (void *)next_key.c_str(), 
+                     (void *)leaf.c_str());
+        if (ret != 0) {
+            return ret;
+        }
+        item[next_key] = leaf;
+        // We can fill the data
+        key = next_key;
+        
+     }
+     return ret;
+}
+
+void Table::DumpItem(std::string item) {
+     for (std::string::iterator it = item.begin() ; it != item.end(); ++it) {
+          int ch = static_cast<unsigned char>(*it);
+          std::cout << std::showbase // show the 0x prefix
+                    << std::internal // fill between the prefix and the number
+                    << std::setfill('0'); // fill with 0s
+
+          std::cout << std::hex << std::setw(2) << ch << " ";
+     }
+     std::cout << std::endl;
+}
+
+void Table::ShowTableElem(std::map<std::string, std::string> item) {
+     std::map<std::string, std::string>::iterator it = item.begin();
+     while (it != item.end()) {
+        // Accessing KEY from element pointed by it.
+        std::string key = it->first;
+        DumpItem(it->first);
+        // Accessing VALUE from element pointed by it.
+        std::string value = it->second;
+        DumpItem(it->second);
+        std::cout << std::endl;
+        // Increment the Iterator to point to next entry
+        it++;
+     }
 }
 
 } //End of namespace iov

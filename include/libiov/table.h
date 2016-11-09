@@ -38,7 +38,7 @@ public:
  std::string table_name;
 
  // Key/Value pair to store local properties of a module
- std::map<uint8_t, uint8_t> data;
+ std::map<std::string, std::string> data;
 
  // Maximun number of propeties for a table
  int max_size;
@@ -59,8 +59,13 @@ public:
   Table();
   ~Table();
 
- // Api to display key/value pair and size
- std::map<std::string, std::string> ShowTable(std::string table_name);
+ // Api to gather key/value pair and size
+ int GetTableElem(std::map<std::string, std::string> &item);
+
+ // Api to display key/value pair
+ void ShowTableElem(std::map<std::string, std::string> item);
+
+ void DumpItem(std::string item);
 
  // Api to Insert elements of the table
  int Insert(bpf_map_type map_type, int key_size, int leaf_size, int max_entries); 

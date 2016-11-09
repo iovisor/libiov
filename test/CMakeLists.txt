@@ -20,6 +20,8 @@ add_executable(test_module_table_lookup_metadata test_module_table_lookup_metada
 target_link_libraries(test_module_table_lookup_metadata iov)
 add_executable(test_module_show_file test_module_show_file.cpp)
 target_link_libraries(test_module_show_file iov)
+add_executable(test_module_table_show test_module_table_show.cpp)
+target_link_libraries(test_module_table_show iov)
 
 
 
@@ -35,3 +37,4 @@ add_test(NAME test_module_table_update COMMAND sudo ./test_module_table_update)
 add_test(NAME test_module_table_lookup_elem COMMAND sudo ./test_module_table_lookup_elem)
 add_test(NAME test_module_table_lookup_metadata COMMAND sudo ./test_module_table_lookup_metadata)
 add_test(NAME test_module_show_file COMMAND sudo ./test_module_show_file)
+add_test(NAME test_module_table_show COMMAND sudo ./test_module_table_show)
