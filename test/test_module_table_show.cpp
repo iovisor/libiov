@@ -35,7 +35,7 @@ using namespace iov;
 
 TEST_CASE("test show table", "[module_table_show]") {
   char *uuid_str = NULL;
-  int fd;
+  int fd, ret;
   uint32_t key;
   FileSystem fs;
   Table table;
@@ -91,24 +91,22 @@ TEST_CASE("test show table", "[module_table_show]") {
   key = 0;
   REQUIRE(table.Update(fd, &key, &meta.item, BPF_ANY) == 0);
 
-  key = 1;
+  key = 0;
   packet.rx_pkt = 20;
   packet.tx_pkt = 21;
   REQUIRE(table.Update(table.table_fd, &key, &packet, BPF_ANY) == 0);
 
-  key = 2;
+  key = 1;
   packet.rx_pkt = 26;
   packet.tx_pkt = 27;
   REQUIRE(table.Update(table.table_fd, &key, &packet, BPF_ANY) == 0);
-  key = 3;
+  key = 2;
   packet.rx_pkt = 45;
   packet.tx_pkt = 58;
   REQUIRE(table.Update(table.table_fd, &key, &packet, BPF_ANY) == 0);
 
-  std::map<std::string, std::string> item;
-  int ret = table.GetTableElem(item);
+  REQUIRE((ret = table.ShowTableElements()) == 0);
 
-  table.ShowTableElem(item);
- 
+  fs.Delete("modules", true); 
   delete[] uuid_str;
 }

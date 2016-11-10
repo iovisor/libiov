@@ -60,10 +60,10 @@ public:
   ~Table();
 
  // Api to gather key/value pair and size
- int GetTableElem(std::map<std::string, std::string> &item);
+ int GetTableElements(std::map<std::string, std::string> &item);
 
  // Api to display key/value pair
- void ShowTableElem(std::map<std::string, std::string> item);
+ int ShowTableElements();
 
  void DumpItem(std::string item);
 

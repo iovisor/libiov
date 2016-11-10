@@ -88,7 +88,7 @@ int Table::GetKey(int fd, void *key, void *next_key) {
      return ret;
 }
 
-int Table::GetTableElem(std::map<std::string, std::string> &item) {
+int Table::GetTableElements(std::map<std::string, std::string> &item) {
      //Open Metadata
      //Open Key desc optional for now
      //Open Leaf desc optional for now
@@ -103,17 +103,20 @@ int Table::GetTableElem(std::map<std::string, std::string> &item) {
          return ret;
      }
 
-     std::string key(meta.item.key_size, '\0');
+     std::string key(meta.item.key_size, 'f');
      std::string next_key(meta.item.key_size, '\0');
      std::string leaf(meta.item.leaf_size, '\0');;
-
+     
      for (;;) {
         ret = GetKey(table_fd, 
                      (void *)key.c_str(), 
                      (void *)next_key.c_str());
 
         if (ret != 0) {
-            // Should return a value for this
+            // Should return a value for this that is not 0
+            // since empty table are ok. Set it to 0 for now.
+            // We'll have to think about error handling later.
+            ret = 0;
             break;
         }
 
@@ -143,9 +146,14 @@ void Table::DumpItem(std::string item) {
      std::cout << std::endl;
 }
 
-void Table::ShowTableElem(std::map<std::string, std::string> item) {
-     std::map<std::string, std::string>::iterator it = item.begin();
-     while (it != item.end()) {
+int Table::ShowTableElements() {
+     std::map<std::string, std::string> items;
+     int ret = 0;
+     ret = GetTableElements(items);
+     if ( ret != 0 )
+        return ret;
+     std::map<std::string, std::string>::iterator it = items.begin();
+     while (it != items.end()) {
         // Accessing KEY from element pointed by it.
         std::string key = it->first;
         DumpItem(it->first);
@@ -156,6 +164,7 @@ void Table::ShowTableElem(std::map<std::string, std::string> item) {
         // Increment the Iterator to point to next entry
         it++;
      }
+     return ret;
 }
 
 } //End of namespace iov
