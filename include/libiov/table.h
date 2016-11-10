@@ -59,6 +59,12 @@ public:
   Table();
   ~Table();
 
+ // Api to set the table scope (local or global)
+ void SetTableScope(bool scope);
+
+ // Api to return the table scope (local or global)
+ bool GetTableScope();
+
  // Api to gather key/value pair and size
  int GetTableElements(std::map<std::string, std::string> &item);
 
@@ -68,7 +74,10 @@ public:
  void DumpItem(std::string item);
 
  // Api to Insert elements of the table
- int Insert(bpf_map_type map_type, int key_size, int leaf_size, int max_entries); 
+ int Insert(bpf_map_type map_type, 
+            int key_size, 
+            int leaf_size, 
+            int max_entries);
 
  // Api to Update an element of the table
  int Update(int fd, void *key, void *value, uint64_t flags);

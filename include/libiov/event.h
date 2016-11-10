@@ -24,6 +24,7 @@
 #include "libiov/types.h"
 
 class Event {
+public:
 
  // Name of the event
  std::string event_name;

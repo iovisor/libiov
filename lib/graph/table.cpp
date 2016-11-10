@@ -54,7 +54,7 @@ int Table::Insert(bpf_map_type map_type,
                     key_size,
                     leaf_size,
                     max_entries);
-
+     
      return fd;
 }
 
@@ -165,6 +165,14 @@ int Table::ShowTableElements() {
         it++;
      }
      return ret;
+}
+
+void Table::SetTableScope(bool scope) {
+     global = scope;
+}
+
+bool Table::GetTableScope() {
+     return global;
 }
 
 } //End of namespace iov
