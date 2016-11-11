@@ -37,7 +37,7 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
   char *uuid_str = NULL;
   int fd;
   FileSystem fs;
-  string path = ModulePath;
+  string pathname;
   string text = "int foo(void *ctx) { return 0; }";
   std::ofstream moduleFile;
 
@@ -49,19 +49,19 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
   uuid_str = new char[100];
   fs.GenerateUuid(uuid_str);
 
-  path.append(uuid_str);
-  fs.CreatePath(path);
-
-  path.append(ModuleEventPath);
-  fs.CreatePath(path);
+  fs.MakePathName(pathname,
+                  uuid_str,
+                  EVENT,
+                  "foo",
+                  true);
 
   fd = mod->GetFileDescriptor();
 
-  REQUIRE(fs.Save(path.c_str(), "foo", fd) == 0);
+  REQUIRE(fs.Save(pathname.c_str(), "foo", fd) == 0);
 
-  path.append("foo");
+  pathname.append("foo");
 
-  moduleFile << path.c_str();
+  moduleFile << pathname.c_str();
   delete[] uuid_str;
   moduleFile.close();
 }

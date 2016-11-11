@@ -222,7 +222,7 @@ void FileSystem::GenerateUuid(char *uuid_str) {
      uuid_unparse(id1, uuid_str);
 }
 
-void FileSystem::CreatePath(std::string path) {
+void FileSystem::CreateDir(std::string path) {
   mkdir(path.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH));
 }
 
@@ -234,4 +234,42 @@ bool FileSystem::Replace(std::string& str, const std::string& from, const std::s
     return true;
 }
 
+void FileSystem::MakePathName(std::string &pathname,
+                              std::string uuid, 
+                              obj_type_t obj_type,
+                              std::string name, 
+                              bool global) {
+     switch(obj_type) {
+       case EVENT:
+         {
+           pathname = ModulePath;
+           pathname.append(uuid);
+           CreateDir(pathname); 
+           pathname.append(ModuleEventPath);
+           CreateDir(pathname);
+         }
+         break;
+       case TABLE:
+         {
+           if (global) {
+               pathname = GlobalTablePath;
+               pathname.append(uuid);
+               CreateDir(pathname);
+           } else {
+               pathname = ModulePath;
+               pathname.append(uuid);
+               CreateDir(pathname);
+               pathname.append(StatePath);
+               CreateDir(pathname);
+               pathname.append(name);
+               CreateDir(pathname);
+           }
+         }
+         pathname.append("/");
+         break; 
+       default:
+         break; 
+     }
+
+}
 } // namespace iov

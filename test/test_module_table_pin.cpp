@@ -61,16 +61,16 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   fs.GenerateUuid(uuid_str);
 
   path.append(uuid_str);
-  fs.CreatePath(path);
+  fs.CreateDir(path);
 
   path.append(StatePath);
-  fs.CreatePath(path);
+  fs.CreateDir(path);
 
   REQUIRE(fs.Save(path.c_str(), bpf_mod->table_name(0), fd) == 0);
 
   string metadata = path; 
   metadata.append(MetadataPath); 
-  fs.CreatePath(metadata);
+  fs.CreateDir(metadata);
 
   path.append(bpf_mod->table_name(0));
 

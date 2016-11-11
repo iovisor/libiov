@@ -38,7 +38,7 @@ TEST_CASE("test show file", "[module_show_file]") {
   FileSystem fs;
   std::vector<string> files;
 
-  fs.Show("modules", files);
+  fs.Show("libiov", files);
   fs.Delete("modules", true); 
  
 }

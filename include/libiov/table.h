@@ -37,7 +37,7 @@ public:
  // Name of the table
  std::string table_name;
 
- // Key/Value pair to store local properties of a module
+ // Key/Value pair 
  std::map<std::string, std::string> data;
 
  // Maximun number of propeties for a table

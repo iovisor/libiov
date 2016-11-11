@@ -40,6 +40,11 @@
 namespace iov {
   class IOModule;
 
+enum obj_type_t{
+  EVENT = 1,
+  TABLE
+};
+
 class FileSystem {
 
   // Root of the filesystem is /sys/fs/bpf/libiov. 
@@ -71,7 +76,12 @@ class FileSystem {
   void Show(std::string pathname, std::vector<std::string> &files);
   int Delete(std::string pathname, bool recursive);
   void GenerateUuid(char *uuid_str);
-  void CreatePath(std::string path);
+  void CreateDir(std::string path);
+  void MakePathName(std::string &pathname,
+                    std::string uuid,
+                    obj_type_t obj_type,
+                    std::string name,
+                    bool global); 
   bool Replace(std::string& str, const std::string& from, const std::string& to); 
 
 };
