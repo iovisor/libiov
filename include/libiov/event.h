@@ -22,7 +22,6 @@
 #include <iostream>
 
 #include "libiov/types.h"
-#include "libiov/event.h"
 #include "libiov/module.h"
 
 namespace ebpf {

@@ -41,6 +41,7 @@
 #define MetadataPath      "metadata/"
 #define KeyDesc           "_key_desc"
 #define LeafDesc          "_leaf_desc" 
+#define UUID_LEN          100
 
 namespace iov {
   class IOModule;

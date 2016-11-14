@@ -22,6 +22,7 @@
 #include "libiov/module.h"
 #include "libiov/event.h"
 #include "libiov/filesystem.h"
+#include "libiov/metadata.h"
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
 #include <bcc/libbpf.h>
@@ -38,33 +39,99 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
   char *uuid_str = NULL;
   int fd;
   FileSystem fs;
-  Event event;
+  Event *event_list;
+  Table *table;
+  MetaData *meta;
+  ebpf::BPFModule *bpf_mod;
   string pathname;
-  string text = "int foo(void *ctx) { return 0; }";
-  std::ofstream moduleFile;
+  string text = "struct interfaces{ u32 rx_pkt; u32 tx_pkt; }; struct packet { u64 rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", uint32_t, struct packet, num_ports, 1); BPF_TABLE(\"hash\", uint32_t, struct interfaces, ifindex, 1); int one(void *ctx) { return 0; } int two(void *ctx) { return 0; } int three(void *ctx) { return 0; }";
+  std::ofstream moduleFile, tableFile, metaFile;
 
   moduleFile.open("/var/tmp/module.txt");
+  tableFile.open("/var/tmp/table.txt");
+  metaFile.open("/var/tmp/meta.txt");
 
   auto mod = unique_ptr<IOModule>(new IOModule());
   REQUIRE(mod->Init(std::move(text)).get() == true);
-  REQUIRE(event.Load(mod.get(), 0, Event::NET_FORWARD) == true);
 
-  uuid_str = new char[100];
+  bpf_mod = mod->GetBpfModule();
+  size_t num_funcs = bpf_mod->num_functions();
+  size_t num_tables = bpf_mod->num_tables();
+
+  uuid_str = new char[UUID_LEN];
+
+  std::cout << "NUMBER OF FUNCTIONS: " << num_funcs << std::endl;
+
+  event_list = new Event[num_funcs];
+  memset(uuid_str, 0, UUID_LEN);
   fs.GenerateUuid(uuid_str);
 
-  REQUIRE(fs.MakePathName(pathname,
-                  uuid_str,
-                  EVENT,
-                  "foo",
-                  true) == 0);
+  for (size_t i = 0; i < num_funcs; i++) {
+       pathname.clear();
+       REQUIRE(event_list[i].Load(mod.get(), 0, Event::NET_FORWARD) == true);
+       REQUIRE(fs.MakePathName(pathname,
+               uuid_str,
+               EVENT,
+               bpf_mod->function_name(i),
+               true) == 0);
 
-  fd = event.GetFileDescriptor();
+       fd = event_list[i].GetFileDescriptor();
 
-  REQUIRE(fs.Save(pathname.c_str(), "foo", fd) == 0);
+       REQUIRE(fs.Save(pathname.c_str(), bpf_mod->function_name(i), fd) == 0);
 
-  pathname.append("foo");
+       pathname.append(bpf_mod->function_name(i));
 
-  moduleFile << pathname.c_str();
-  delete[] uuid_str;
+       moduleFile << pathname.c_str() << std::endl;
+  }
+
+  table = new Table[num_tables];
+  meta = new MetaData[num_tables];
+
+  std::cout << "NUMBER OF TABLES: " << num_tables << std::endl;
+  string meta_file_name;
+  string table_file_name;
+  string key_leaf_path;
+  uint32_t key;
+
+  for (size_t i = 0; i < num_tables; i++) {
+       pathname.clear();
+       std::cout << "TABLE TYPE: " << bpf_mod->table_type(i) << std::endl;
+       fd = table[i].Insert((bpf_map_type) (bpf_mod->table_type(i)), bpf_mod->table_key_size(i),
+                    bpf_mod->table_leaf_size(i), 1);
+
+       REQUIRE(fs.MakePathName(pathname,
+               uuid_str,
+               TABLE,
+               bpf_mod->table_name(i),
+               false) == 0);
+       REQUIRE(fs.Save(pathname.c_str(), bpf_mod->table_name(i), fd) == 0);
+
+       table_file_name = pathname;
+       table_file_name.append(bpf_mod->table_name(i));
+       tableFile << table_file_name.c_str();
+
+       meta[i].Update(bpf_mod);
+
+       fd = table[i].Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
+
+       meta_file_name = bpf_mod->table_name(i);
+       meta_file_name.append("_metadata");
+
+       REQUIRE(fs.Save(pathname.c_str(), meta_file_name.c_str(), fd) == 0);
+
+       key_leaf_path = pathname;
+       key_leaf_path.append(meta_file_name);
+
+       metaFile << key_leaf_path.c_str();
+       key = 0;
+       REQUIRE(table[i].Update(fd, &key, &meta[i].item, BPF_ANY) == 0);
+  }
+
+  delete [] uuid_str;
+  delete [] event_list;
+  delete [] table;
+  delete [] meta;
   moduleFile.close();
+  tableFile.close();
+  metaFile.close();
 }
