@@ -20,6 +20,7 @@
 #include <libiov.h>
 #include "libiov/command.h"
 #include "libiov/module.h"
+#include "libiov/event.h"
 #include "libiov/filesystem.h"
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
@@ -37,6 +38,7 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
   char *uuid_str = NULL;
   int fd;
   FileSystem fs;
+  Event event;
   string pathname;
   string text = "int foo(void *ctx) { return 0; }";
   std::ofstream moduleFile;
@@ -44,7 +46,8 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
   moduleFile.open("/var/tmp/module.txt");
 
   auto mod = unique_ptr<IOModule>(new IOModule());
-  REQUIRE(mod->Init(std::move(text), IOModule::NET_FORWARD).get() == true);
+  REQUIRE(mod->Init(std::move(text)).get() == true);
+  REQUIRE(event.Load(mod.get(), 0, Event::NET_FORWARD) == true);
 
   uuid_str = new char[100];
   fs.GenerateUuid(uuid_str);
@@ -55,7 +58,7 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
                   "foo",
                   true) == 0);
 
-  fd = mod->GetFileDescriptor();
+  fd = event.GetFileDescriptor();
 
   REQUIRE(fs.Save(pathname.c_str(), "foo", fd) == 0);
 

@@ -17,7 +17,6 @@
 #include <string.h>
 #include "libiov/internal/types.h"
 #include "libiov/module.h"
-#include "libiov/prog.h"
 #include "libiov/metadata.h"
 #include "libiov/table.h"
 #include "libiov/filesystem.h"

@@ -22,9 +22,25 @@
 #include <iostream>
 
 #include "libiov/types.h"
+#include "libiov/event.h"
+#include "libiov/module.h"
+
+namespace ebpf {
+class BPFModule;
+}
+
+namespace iov {
+class IOModule;
 
 class Event {
+private:
+  FileDescPtr prog_;
+
 public:
+  enum ModuleType {
+    NET_FORWARD,
+    NET_POLICY,
+  };
 
  // Name of the event
  std::string event_name;
@@ -47,6 +63,7 @@ public:
  // Apis' to Insert/Delete an event
  int Insert(std::string event_name);
  int Delete(std::string event_name);
-
+ bool Load( IOModule *module, size_t index, ModuleType type);
+ int GetFileDescriptor();
 };
-
+} //namespace iov

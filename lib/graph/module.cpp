@@ -23,7 +23,6 @@
 #include "libiov/internal/types.h"
 #include "libiov/table.h"
 #include "libiov/module.h"
-#include "libiov/prog.h"
 #include "libiov/filesystem.h"
 #include "libiov/event.h"
 
@@ -37,7 +36,7 @@ namespace iov {
 IOModule::IOModule() {}
 IOModule::~IOModule() {}
 
-future<bool> IOModule::Init(string &&text, ModuleType type) {
+future<bool> IOModule::Init(string &&text) {
   future<bool> res = std::async(std::launch::async,
       [this](string &&text) -> bool {
         mod_ = make_unique<ebpf::BPFModule>(0);
@@ -46,30 +45,7 @@ future<bool> IOModule::Init(string &&text, ModuleType type) {
         return true;
       },
       std::move(text));
-  if (!res.get())
-    return res;
-  return Load(type);
-}
-
-future<bool> IOModule::Load(ModuleType type) {
-  return std::async(std::launch::async, [this, type]() -> bool {
-    switch (type) {
-    case NET_FORWARD:
-      prog_.reset(new FileDesc(bpf_prog_load(BPF_PROG_TYPE_SCHED_CLS,
-          (const struct bpf_insn *)mod_->function_start(0),
-          mod_->function_size(0), mod_->license(), mod_->kern_version(),
-          nullptr, 0)));
-      if (*prog_ >= 0)
-        return true;
-    default: {}
-    }
-    return false;
-  });
-}
-
-int IOModule::GetFileDescriptor() {
-  FileDesc *fd = prog_.get();
-  return *fd;
+  return res;
 }
 
 ebpf::BPFModule *IOModule::GetBpfModule() const {

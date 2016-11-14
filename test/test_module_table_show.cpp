@@ -50,7 +50,7 @@ TEST_CASE("test show table", "[module_table_show]") {
     uint64_t tx_pkt;
   } packet;
 
-  module.Init(std::move(text), IOModule::NET_POLICY);
+  module.Init(std::move(text));
 
   bpf_mod = module.GetBpfModule();
    

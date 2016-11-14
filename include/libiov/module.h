@@ -18,8 +18,11 @@
 
 #include <future>
 #include <string>
+#include <uuid/uuid.h>
 
 #include "libiov/types.h"
+#include "libiov/table.h"
+#include "libiov/event.h"
 
 namespace ebpf {
 class BPFModule;
@@ -27,26 +30,50 @@ class BPFModule;
 
 namespace iov {
 
+class Table;
+class Event;
+
 class IOModule {
- public:
-  enum ModuleType {
-    NET_FORWARD,
-    NET_POLICY,
-  };
+ // IOModule should be a collection of tables and/or events, where tables
+ // collect the states of a module (counters, lookups etc..) and events
+ // are the ingress and egress packet, kprobe etc... handlers
 
  private:
   FileDescPtr prog_;
   std::unique_ptr<ebpf::BPFModule> mod_;
 
- private:
-  std::future<bool> Load(ModuleType type);
-
  public:
   IOModule();
   ~IOModule();
-  std::future<bool> Init(std::string &&text, ModuleType type);
-  int GetFileDescriptor();
+  std::future<bool> Init(std::string &&text);
   ebpf::BPFModule *GetBpfModule() const;
+
+  // Random number that uniquily identify a module. Look at filestem.h
+  // for filesystem layout
+  std::map<std::string, uuid_t> prog_uuid;
+
+  struct Properties {
+    // Tables associated to this module
+    std::vector<Table> tables;
+
+    // Event associated to this module
+    std::vector<Event> events;
+  };
+
+  // Human readable name of the module to translate the uuid
+  std::string name;
+  // Api to retrive uuid from prog_name
+  uuid_t *NameToUuid(std::string module_name);
+
+  // Api to list all the name's properties of a module. Like tables and events.
+  Properties ShowModule(std::string module_name);
+
+  // Api to display one/all table states for a module
+  std::map<std::string, Table> LocalTableStates(std::string table_name);
+
+  // Api to display all events for a module
+  std::vector<Event> LocalEvent();
+
 };
 
 }  // namespace iov

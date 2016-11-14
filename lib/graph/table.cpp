@@ -22,7 +22,6 @@
 #include <iomanip>      // std::setfill, std::set
 #include "libiov/internal/types.h"
 #include "libiov/module.h"
-#include "libiov/prog.h"
 #include "libiov/table.h"
 #include "libiov/filesystem.h"
 #include "libiov/metadata.h"

@@ -50,7 +50,7 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   tableFile.open("/var/tmp/table.txt");
   metaFile.open("/var/tmp/meta.txt");
 
-  module.Init(std::move(text), IOModule::NET_POLICY);
+  module.Init(std::move(text));
 
   bpf_mod = module.GetBpfModule();
    
