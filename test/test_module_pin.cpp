@@ -49,11 +49,11 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
   uuid_str = new char[100];
   fs.GenerateUuid(uuid_str);
 
-  fs.MakePathName(pathname,
+  REQUIRE(fs.MakePathName(pathname,
                   uuid_str,
                   EVENT,
                   "foo",
-                  true);
+                  true) == 0);
 
   fd = mod->GetFileDescriptor();
 

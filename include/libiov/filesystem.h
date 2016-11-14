@@ -24,6 +24,11 @@
 #include <iostream>
 #include <fstream>
 #include <uuid/uuid.h>
+#include <boost/filesystem.hpp>
+
+// Requires the following module to be install
+// apt-get install libboost-filesystem-dev
+// apt-get install uuid uuid-dev
 
 #include "libiov/types.h"
 
@@ -76,13 +81,12 @@ class FileSystem {
   void Show(std::string pathname, std::vector<std::string> &files);
   int Delete(std::string pathname, bool recursive);
   void GenerateUuid(char *uuid_str);
-  void CreateDir(std::string path);
-  void MakePathName(std::string &pathname,
+  int CreateDir(std::string path);
+  int MakePathName(std::string &pathname,
                     std::string uuid,
                     obj_type_t obj_type,
                     std::string name,
-                    bool global); 
+                    bool global);
   bool Replace(std::string& str, const std::string& from, const std::string& to); 
-
 };
 } // namespace iov

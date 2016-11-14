@@ -42,7 +42,7 @@ TEST_CASE("test show table", "[module_table_show]") {
   IOModule module;
   MetaData meta;
   ebpf::BPFModule *bpf_mod;
-  string path = ModulePath;
+  string pathname;
   string text = "struct packet { u64 rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", uint32_t, struct packet, interfaces, 20);";
 
   struct packet_ {
@@ -62,19 +62,13 @@ TEST_CASE("test show table", "[module_table_show]") {
   uuid_str = new char[100];
   fs.GenerateUuid(uuid_str);
 
-  path.append(uuid_str);
-  fs.CreateDir(path);
+  REQUIRE(fs.MakePathName(pathname,
+                  uuid_str,
+                  TABLE,
+                  bpf_mod->table_name(0),
+                  false) == 0);
 
-  path.append(StatePath);
-  fs.CreateDir(path);
-
-  REQUIRE(fs.Save(path.c_str(), bpf_mod->table_name(0), fd) == 0);
-
-  string metadata = path; 
-  metadata.append(MetadataPath); 
-  fs.CreateDir(metadata);
-
-  path.append(bpf_mod->table_name(0));
+  REQUIRE(fs.Save(pathname.c_str(), bpf_mod->table_name(0), fd) == 0);
 
   string table_key = bpf_mod->table_key_desc(0);
   string table_leaf = bpf_mod->table_leaf_desc(0);
@@ -86,7 +80,7 @@ TEST_CASE("test show table", "[module_table_show]") {
 
   string file_name = bpf_mod->table_name(0);
   file_name.append("_metadata"); 
-  REQUIRE(fs.Save(metadata.c_str(), file_name.c_str(), fd) == 0);
+  REQUIRE(fs.Save(pathname.c_str(), file_name.c_str(), fd) == 0);
 
   key = 0;
   REQUIRE(table.Update(fd, &key, &meta.item, BPF_ANY) == 0);

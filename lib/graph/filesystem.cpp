@@ -20,6 +20,7 @@
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
 #include <bcc/libbpf.h>
+#include <boost/system/error_code.hpp>
 
 #include "libiov/internal/types.h"
 #include "libiov/module.h"
@@ -222,10 +223,6 @@ void FileSystem::GenerateUuid(char *uuid_str) {
      uuid_unparse(id1, uuid_str);
 }
 
-void FileSystem::CreateDir(std::string path) {
-  mkdir(path.c_str(), (S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH));
-}
-
 bool FileSystem::Replace(std::string& str, const std::string& from, const std::string& to) {
     size_t start_pos = str.find(from);
     if(start_pos == std::string::npos)
@@ -234,19 +231,33 @@ bool FileSystem::Replace(std::string& str, const std::string& from, const std::s
     return true;
 }
 
-void FileSystem::MakePathName(std::string &pathname,
+
+int FileSystem::CreateDir(std::string dirpath) {
+  int ret = 0;
+  boost::filesystem::path p(dirpath.c_str());
+  try {
+     
+     boost::filesystem::create_directories(p);
+  }
+  catch(boost::filesystem::filesystem_error& ec) {
+     ret = -1;
+     std::cout << "exception caught: " << ec.code().message() << std::endl;
+  } 
+  return ret;
+}
+
+int FileSystem::MakePathName(std::string &pathname,
                               std::string uuid, 
                               obj_type_t obj_type,
                               std::string name, 
                               bool global) {
+     int ret = 0;
      switch(obj_type) {
        case EVENT:
          {
            pathname = ModulePath;
-           pathname.append(uuid);
-           CreateDir(pathname); 
-           pathname.append(ModuleEventPath);
-           CreateDir(pathname);
+           pathname.append(uuid).append(ModuleEventPath);
+           ret = CreateDir(pathname);
          }
          break;
        case TABLE:
@@ -254,22 +265,31 @@ void FileSystem::MakePathName(std::string &pathname,
            if (global) {
                pathname = GlobalTablePath;
                pathname.append(uuid);
-               CreateDir(pathname);
+               ret = CreateDir(pathname);
            } else {
                pathname = ModulePath;
-               pathname.append(uuid);
-               CreateDir(pathname);
-               pathname.append(StatePath);
-               CreateDir(pathname);
-               pathname.append(name);
-               CreateDir(pathname);
+               pathname.append(uuid).append(StatePath);
+               ret = CreateDir(pathname);
            }
          }
-         pathname.append("/");
-         break; 
+         break;
        default:
-         break; 
+         ret = -1;
+         return ret; 
      }
 
+     if (ret) {
+        std::cout << "mkdir " << pathname << " failed: " << strerror(errno) << std::endl;
+        return ret;
+     }
+
+     pathname.append(name).append("/");
+     ret = CreateDir(pathname);
+     if (ret) {
+        std::cout << "mkdir " << pathname << " failed: " << strerror(errno) << std::endl;
+        return ret;
+     }
+
+     return ret;
 }
 } // namespace iov

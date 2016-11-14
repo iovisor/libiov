@@ -25,9 +25,6 @@
 #include "libiov/table.h"
 #include "libiov/event.h"
 
-//Requires the following module to be install
-//apt-get install uuid uuid-dev
-
 namespace iov {
 
 class Table;

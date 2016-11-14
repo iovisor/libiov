@@ -42,7 +42,7 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   IOModule module;
   MetaData meta;
   ebpf::BPFModule *bpf_mod;
-  string path = ModulePath;
+  string pathname;
   std::ofstream tableFile;
   std::ofstream metaFile;
   string text = "struct host { u64 mac; int ifindex; int pad;}; struct packet { u64 rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", struct host, struct packet, num_ports, 1);";
@@ -60,21 +60,18 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   uuid_str = new char[100];
   fs.GenerateUuid(uuid_str);
 
-  path.append(uuid_str);
-  fs.CreateDir(path);
+  REQUIRE(fs.MakePathName(pathname,
+                  uuid_str,
+                  TABLE,
+                  bpf_mod->table_name(0),
+                  false) == 0);
 
-  path.append(StatePath);
-  fs.CreateDir(path);
+  REQUIRE(fs.Save(pathname.c_str(), bpf_mod->table_name(0), fd) == 0);
 
-  REQUIRE(fs.Save(path.c_str(), bpf_mod->table_name(0), fd) == 0);
+  string file_to_save = pathname;
+  file_to_save.append(bpf_mod->table_name(0));
+  tableFile << file_to_save.c_str();
 
-  string metadata = path; 
-  metadata.append(MetadataPath); 
-  fs.CreateDir(metadata);
-
-  path.append(bpf_mod->table_name(0));
-
-  tableFile << path.c_str();
   string table_key = bpf_mod->table_key_desc(0);
   string table_leaf = bpf_mod->table_leaf_desc(0);
 
@@ -84,12 +81,12 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
 
   string file_name = bpf_mod->table_name(0);
   file_name.append("_metadata"); 
-  REQUIRE(fs.Save(metadata.c_str(), file_name.c_str(), fd) == 0);
+  REQUIRE(fs.Save(pathname.c_str(), file_name.c_str(), fd) == 0);
 
-  string key_leaf_path = metadata;
-  metadata.append(file_name);
+  string key_leaf_path = pathname;
+  key_leaf_path.append(file_name);
 
-  metaFile << metadata.c_str();
+  metaFile << key_leaf_path.c_str();
 
   key = 0;
   REQUIRE(table.Update(fd, &key, &meta.item, BPF_ANY) == 0);
@@ -98,7 +95,7 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
 
   string f_key_desc = bpf_mod->table_name(0);
   f_key_desc.append(KeyDesc);
-  REQUIRE(fs.Save(key_leaf_path.c_str(), f_key_desc.c_str(), fd) == 0);
+  REQUIRE(fs.Save(pathname.c_str(), f_key_desc.c_str(), fd) == 0);
 
   REQUIRE(table.Update(fd, &key, (void *)table_key.c_str(), BPF_ANY) == 0);
 
@@ -106,7 +103,7 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
 
   string f_leaf_desc = bpf_mod->table_name(0);
   f_leaf_desc.append(LeafDesc);
-  REQUIRE(fs.Save(key_leaf_path.c_str(), f_leaf_desc.c_str(), fd) == 0);
+  REQUIRE(fs.Save(pathname.c_str(), f_leaf_desc.c_str(), fd) == 0);
 
   REQUIRE(table.Update(fd, &key, (void *)table_leaf.c_str(), BPF_ANY) == 0);
 
