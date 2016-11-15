@@ -51,6 +51,6 @@ TEST_CASE("test show module attributes", "[module_show]") {
   uuid_test = module.NameToUuid(module_name); 
   REQUIRE( uuid_test == uuid_str);
 
-  tables = module.ShowLocalStates(module_name);
-  events = module.ShowLocalEvents(module_name);
+  tables = module.ShowStates(module_name);
+  events = module.ShowEvents(module_name);
 }

@@ -40,6 +40,8 @@ class IOModule {
 
  private:
   std::unique_ptr<ebpf::BPFModule> mod_;
+  std::vector<Table*> tables;
+  std::vector<Event*> events;
 
  public:
   IOModule();
@@ -57,10 +59,10 @@ class IOModule {
   std::string NameToUuid(std::string module_name);
 
   // Api to display one/all table states for a module
-  std::vector<Table> ShowLocalStates(std::string module_name);
+  std::vector<Table> ShowStates(std::string module_name);
 
   // Api to display all events for a module
-  std::vector<Event> ShowLocalEvents(std::string module_name);
+  std::vector<Event> ShowEvents(std::string module_name);
 
 };
 

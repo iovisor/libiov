@@ -54,7 +54,7 @@ ebpf::BPFModule *IOModule::GetBpfModule() const {
   return mod_.get();
 }
 
-std::vector<Table> IOModule::ShowLocalStates(string module_name) {
+std::vector<Table> IOModule::ShowStates(string module_name) {
   //Lookup the module in the filesystem
   //return the all the table object beloging to the module
   string uuid_str;
@@ -85,7 +85,7 @@ std::vector<Table> IOModule::ShowLocalStates(string module_name) {
   return tables;
 }
 
-vector<Event> IOModule::ShowLocalEvents(string module_name) {
+vector<Event> IOModule::ShowEvents(string module_name) {
   //Lookup the module in the filesystem
   //return the all the event object beloging to the module
   string uuid_str;
