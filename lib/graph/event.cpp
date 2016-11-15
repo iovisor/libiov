@@ -39,18 +39,6 @@ namespace iov {
  Event::Event() {}
  Event::~Event() {}
 
- // Api to display property of the event
- void Event::ShowEvent(std::string event_name) {
- }
-
- // Apis' to Insert/Delete an event
- int Event::Insert(std::string event_name) {
-     return 1;
- }
- int Event::Delete(std::string event_name) {
-     return 1;
- }
-
  bool Event::Load( IOModule *module, size_t index, ModuleType type) {
     ebpf::BPFModule *bpf_mod = module->GetBpfModule();
     switch (type) {

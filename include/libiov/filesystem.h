@@ -88,6 +88,7 @@ class FileSystem {
                     obj_type_t obj_type,
                     std::string name,
                     bool global);
-  bool Replace(std::string& str, const std::string& from, const std::string& to); 
+  bool Replace(std::string& str, const std::string& from, const std::string& to);
+  std::vector<std::string> GetFiles(std::string pathname);
 };
 } // namespace iov

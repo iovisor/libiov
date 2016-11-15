@@ -31,8 +31,9 @@
 
 using std::future;
 using std::promise;
-using std::string;
 using namespace iov::internal;
+using namespace std;
+using namespace boost::filesystem;
 
 namespace iov {
 
@@ -48,7 +49,7 @@ FileSystem::~FileSystem() {}
  * file_name is the file where the fd will be save
  */
 
-int FileSystem::Save(std::string pathname, std::string file_name, int fd) {
+int FileSystem::Save(string pathname, string file_name, int fd) {
      int ret = 0;
      const char *file = NULL;
      pathname.append(file_name);
@@ -63,7 +64,7 @@ int FileSystem::Save(std::string pathname, std::string file_name, int fd) {
  * for more info.
  */
 
-int FileSystem::Open(std::string pathname) {
+int FileSystem::Open(string pathname) {
      int ret = 0;
      const char *file = NULL;
      file = pathname.c_str();
@@ -71,10 +72,10 @@ int FileSystem::Open(std::string pathname) {
      return ret;
 }
 
-void FileSystem::ProcessEntry(std::string directory,
-                              std::vector<std::string> &files)
+void FileSystem::ProcessEntry(string directory,
+                              vector<string> &files)
 {
-    std::string dirToOpen = root_path;
+    string dirToOpen = root_path;
 
     if (directory.compare("libiov") != 0 ) {
        dirToOpen = root_path + directory;
@@ -85,7 +86,7 @@ void FileSystem::ProcessEntry(std::string directory,
 
     if(NULL == dir)
     {
-        std::cout << "could not open directory: " << dirToOpen.c_str() << std::endl;
+        cout << "could not open directory: " << dirToOpen.c_str() << endl;
         return;
     }
 
@@ -103,7 +104,7 @@ void FileSystem::ProcessEntry(std::string directory,
 }
 
 void FileSystem::ProcessEntity(struct dirent* entity,
-                               std::vector<std::string> &files)
+                               vector<string> &files)
 {
     //find entity type
     if (entity->d_type == DT_DIR)
@@ -114,23 +115,23 @@ void FileSystem::ProcessEntity(struct dirent* entity,
             return;
         }
         //it's an directory so process it
-        ProcessEntry(std::string(entity->d_name), files);
+        ProcessEntry(string(entity->d_name), files);
         return;
     }
 
     if (entity->d_type == DT_REG)
     {//regular file
-        ProcessFile(std::string(entity->d_name), files);
+        ProcessFile(string(entity->d_name), files);
         return;
     }
 
-    std::cout << "Not a file or directory: " << entity->d_name << std::endl;
+    cout << "Not a file or directory: " << entity->d_name << endl;
 }
 
-void FileSystem::ProcessFile(std::string file,
-                             std::vector<std::string> &files)
+void FileSystem::ProcessFile(string file,
+                             vector<string> &files)
 {
-    std::cout << "FILE: " << file << std::endl;
+    cout << "FILE: " << file << endl;
     files.push_back(file);
 }
 
@@ -142,11 +143,11 @@ void FileSystem::ProcessFile(std::string file,
  * for more info.
  */
 
-void FileSystem::Show(std::string pathname, std::vector<std::string> &files) {
+void FileSystem::Show(string pathname, vector<string> &files) {
      ProcessEntry(pathname, files);
 }
 
-bool FileSystem::dirExists(std::string dir_path) {
+bool FileSystem::dirExists(string dir_path) {
     struct stat sb;
 
     if (stat(dir_path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))
@@ -155,7 +156,7 @@ bool FileSystem::dirExists(std::string dir_path) {
         return false;
 }
 
-int FileSystem::DeleteFilesInDirectory(std::string dirpath, bool recursive) {
+int FileSystem::DeleteFilesInDirectory(string dirpath, bool recursive) {
 
     if (dirpath.empty())
         return 0;
@@ -165,7 +166,7 @@ int FileSystem::DeleteFilesInDirectory(std::string dirpath, bool recursive) {
         return errno;
 
     struct dirent *next_file;
-    std::string filepath;
+    string filepath;
     int ret_val;
 
     while ( (next_file = readdir(folder)) != NULL )
@@ -210,7 +211,7 @@ int FileSystem::DeleteFilesInDirectory(std::string dirpath, bool recursive) {
  * for more info.
  */
 
-int FileSystem::Delete(std::string pathname, bool recursive) {
+int FileSystem::Delete(string pathname, bool recursive) {
     pathname = root_path + pathname;
     DeleteFilesInDirectory(pathname, recursive);
     return 0;
@@ -222,16 +223,16 @@ void FileSystem::GenerateUuid(char *uuid_str) {
      uuid_unparse(id1, uuid_str);
 }
 
-bool FileSystem::Replace(std::string& str, const std::string& from, const std::string& to) {
+bool FileSystem::Replace(string& str, const string& from, const string& to) {
     size_t start_pos = str.find(from);
-    if(start_pos == std::string::npos)
+    if(start_pos == string::npos)
         return false;
     str.replace(start_pos, from.length(), to);
     return true;
 }
 
 
-int FileSystem::CreateDir(std::string dirpath) {
+int FileSystem::CreateDir(string dirpath) {
   int ret = 0;
   boost::filesystem::path p(dirpath.c_str());
   try {
@@ -240,16 +241,16 @@ int FileSystem::CreateDir(std::string dirpath) {
   }
   catch(boost::filesystem::filesystem_error& ec) {
      ret = -1;
-     std::cout << "exception caught: " << ec.code().message() << std::endl;
+     cout << "exception caught: " << ec.code().message() << endl;
   } 
   return ret;
 }
 
-int FileSystem::MakePathName(std::string &pathname,
-                              std::string uuid, 
-                              obj_type_t obj_type,
-                              std::string name, 
-                              bool global) {
+int FileSystem::MakePathName(string &pathname,
+                             string uuid, 
+                             obj_type_t obj_type,
+                             string name, 
+                             bool global) {
      int ret = 0;
      switch(obj_type) {
        case EVENT:
@@ -278,17 +279,36 @@ int FileSystem::MakePathName(std::string &pathname,
      }
 
      if (ret) {
-        std::cout << "mkdir " << pathname << " failed: " << strerror(errno) << std::endl;
+        cout << "mkdir " << pathname << " failed: " << strerror(errno) << endl;
         return ret;
      }
 
-     pathname.append(name).append("/");
-     ret = CreateDir(pathname);
-     if (ret) {
-        std::cout << "mkdir " << pathname << " failed: " << strerror(errno) << std::endl;
-        return ret;
+     if (!name.empty()) {
+        pathname.append(name).append("/");
+        ret = CreateDir(pathname);
+        if (ret) {
+            cout << "mkdir " << pathname << " failed: " << strerror(errno) << endl;
+            return ret;
+        }
      }
 
      return ret;
+}
+vector<string> FileSystem::GetFiles(string pathname) {
+  path p = pathname.c_str();
+  string file_name;
+  size_t found;
+  vector<string> v;
+
+  recursive_directory_iterator dir(p);
+  for(auto&& i : dir) {
+    if (!is_directory(i)) {
+        file_name = basename(i.path());
+        found = file_name.find("_metadata");
+        if (found == string::npos)
+            v.push_back(basename(i.path()));
+    }
+  }
+  return v;
 }
 } // namespace iov

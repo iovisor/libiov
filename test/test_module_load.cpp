@@ -35,7 +35,7 @@ using std::vector;
 using std::unique_ptr;
 using namespace iov;
 
-TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
+TEST_CASE("test load and save module fds' (states and events) to filesystem", "[module_load]") {
   char *uuid_str = NULL;
   int fd;
   FileSystem fs;
@@ -45,11 +45,12 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
   ebpf::BPFModule *bpf_mod;
   string pathname;
   string text = "struct interfaces{ u32 rx_pkt; u32 tx_pkt; }; struct packet { u64 rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", uint32_t, struct packet, num_ports, 1); BPF_TABLE(\"hash\", uint32_t, struct interfaces, ifindex, 1); int one(void *ctx) { return 0; } int two(void *ctx) { return 0; } int three(void *ctx) { return 0; }";
-  std::ofstream moduleFile, tableFile, metaFile;
+  std::ofstream uuidFile, moduleFile, tableFile, metaFile;
 
   moduleFile.open("/var/tmp/module.txt");
   tableFile.open("/var/tmp/table.txt");
   metaFile.open("/var/tmp/meta.txt");
+  uuidFile.open("/var/tmp/uuid.txt");
 
   auto mod = unique_ptr<IOModule>(new IOModule());
   REQUIRE(mod->Init(std::move(text)).get() == true);
@@ -65,6 +66,7 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
   event_list = new Event[num_funcs];
   memset(uuid_str, 0, UUID_LEN);
   fs.GenerateUuid(uuid_str);
+  uuidFile << uuid_str;
 
   for (size_t i = 0; i < num_funcs; i++) {
        pathname.clear();
@@ -108,7 +110,7 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
 
        table_file_name = pathname;
        table_file_name.append(bpf_mod->table_name(i));
-       tableFile << table_file_name.c_str();
+       tableFile << table_file_name.c_str() << std::endl;
 
        meta[i].Update(bpf_mod);
 
@@ -122,7 +124,7 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
        key_leaf_path = pathname;
        key_leaf_path.append(meta_file_name);
 
-       metaFile << key_leaf_path.c_str();
+       metaFile << key_leaf_path.c_str() << std::endl;
        key = 0;
        REQUIRE(table[i].Update(fd, &key, &meta[i].item, BPF_ANY) == 0);
   }
@@ -134,4 +136,5 @@ TEST_CASE("test save local event fd to filesystem", "[module_pin]") {
   moduleFile.close();
   tableFile.close();
   metaFile.close();
+  uuidFile.close();
 }

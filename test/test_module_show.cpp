@@ -32,15 +32,25 @@ using std::string;
 using std::vector;
 using std::unique_ptr;
 using namespace iov;
+using namespace std;
 
-TEST_CASE("test show event", "[module_show_event]") {
-  std::string text;
+TEST_CASE("test show module attributes", "[module_show]") {
   FileSystem fs;
-  std::vector<string> files;
+  string uuid_str, uuid_test;
+  IOModule module;
+  string module_name = "bridge";
+  ifstream uuidFile;
+  vector<Table> tables;
+  vector<Event> events;
 
-  fs.Show("modules", files);
-  REQUIRE ( files[0] == "foo");
+  uuidFile.open("/var/tmp/uuid.txt");
+  getline(uuidFile,uuid_str);
+  uuidFile.close();
 
-  fs.Delete("modules", true); 
- 
+  module.prog_uuid[module_name] = uuid_str;
+  uuid_test = module.NameToUuid(module_name); 
+  REQUIRE( uuid_test == uuid_str);
+
+  tables = module.ShowLocalStates(module_name);
+  events = module.ShowLocalEvents(module_name);
 }

@@ -56,13 +56,10 @@ public:
  Event();
  ~Event();
 
- // Api to display property of the event
- void ShowEvent(std::string event_name);
-
- // Apis' to Insert/Delete an event
- int Insert(std::string event_name);
- int Delete(std::string event_name);
+ // Api to load the event in kernel
  bool Load( IOModule *module, size_t index, ModuleType type);
+
+ // Api to return the file descriptor
  int GetFileDescriptor();
 };
 } //namespace iov

@@ -39,7 +39,6 @@ class IOModule {
  // are the ingress and egress packet, kprobe etc... handlers
 
  private:
-  FileDescPtr prog_;
   std::unique_ptr<ebpf::BPFModule> mod_;
 
  public:
@@ -50,29 +49,18 @@ class IOModule {
 
   // Random number that uniquily identify a module. Look at filestem.h
   // for filesystem layout
-  std::map<std::string, uuid_t> prog_uuid;
-
-  struct Properties {
-    // Tables associated to this module
-    std::vector<Table> tables;
-
-    // Event associated to this module
-    std::vector<Event> events;
-  };
+  std::map<std::string, std::string> prog_uuid;
 
   // Human readable name of the module to translate the uuid
   std::string name;
   // Api to retrive uuid from prog_name
-  uuid_t *NameToUuid(std::string module_name);
-
-  // Api to list all the name's properties of a module. Like tables and events.
-  Properties ShowModule(std::string module_name);
+  std::string NameToUuid(std::string module_name);
 
   // Api to display one/all table states for a module
-  std::map<std::string, Table> LocalTableStates(std::string table_name);
+  std::vector<Table> ShowLocalStates(std::string module_name);
 
   // Api to display all events for a module
-  std::vector<Event> LocalEvent();
+  std::vector<Event> ShowLocalEvents(std::string module_name);
 
 };
 
