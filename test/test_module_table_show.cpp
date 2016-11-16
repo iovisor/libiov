@@ -76,7 +76,7 @@ TEST_CASE("test show table", "[module_table_show]") {
   meta.Update(bpf_mod);
 
   fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
-  table.table_desc_fd = fd;
+  table.table_meta_fd = fd;
 
   string file_name = bpf_mod->table_name(0);
   file_name.append("_metadata"); 

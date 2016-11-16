@@ -55,6 +55,10 @@ class IOModule {
 
   // Human readable name of the module to translate the uuid
   std::string name;
+
+  void InsertTable(Table table);
+  void InsertEvent(Event event);
+
   // Api to retrive uuid from prog_name
   std::string NameToUuid(std::string module_name);
 

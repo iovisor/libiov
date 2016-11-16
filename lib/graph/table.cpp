@@ -97,7 +97,7 @@ int Table::GetTableElements(std::map<std::string, std::string> &item) {
      int key_meta;
 
      key_meta = 0;
-     ret = Lookup(table_desc_fd, &key_meta, &meta.item);
+     ret = Lookup(table_meta_fd, &key_meta, &meta.item);
      if (ret != 0) {
          return ret;
      }
@@ -174,5 +174,17 @@ bool Table::GetTableScope() {
      return global;
 }
 
+void Table::UpdateAttributes(ebpf::BPFModule *bpf_mod, 
+                             size_t index,
+                             bool scope,
+                             uint8_t flags,
+                             int fd,
+                             int meta_fd) {
+     table_name = bpf_mod->table_name(index);
+     global = scope;
+     visibility = flags;
+     table_fd = fd;
+     table_meta_fd = meta_fd;
+}
 } //End of namespace iov
 

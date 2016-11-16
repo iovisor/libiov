@@ -54,10 +54,17 @@ public:
 
  // File desciptor that keeps the metadata for the table,
  // specifically types for key and value
- int table_desc_fd;
+ int table_meta_fd;
 
-  Table();
-  ~Table();
+ Table();
+ ~Table();
+
+ void UpdateAttributes(ebpf::BPFModule *bpf_mod, 
+                       size_t index,
+                       bool scope,
+                       uint8_t flags,
+                       int fd,
+                       int meta_fd); 
 
  // Api to set the table scope (local or global)
  void SetTableScope(bool scope);

@@ -37,7 +37,7 @@ using namespace iov;
 
 TEST_CASE("test load and save module fds' (states and events) to filesystem", "[module_load]") {
   char *uuid_str = NULL;
-  int fd;
+  int fd, meta_fd;
   FileSystem fs;
   Event *event_list;
   Table *table;
@@ -114,7 +114,7 @@ TEST_CASE("test load and save module fds' (states and events) to filesystem", "[
 
        meta[i].Update(bpf_mod);
 
-       fd = table[i].Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
+       meta_fd = table[i].Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
 
        meta_file_name = bpf_mod->table_name(i);
        meta_file_name.append("_metadata");
@@ -127,6 +127,8 @@ TEST_CASE("test load and save module fds' (states and events) to filesystem", "[
        metaFile << key_leaf_path.c_str() << std::endl;
        key = 0;
        REQUIRE(table[i].Update(fd, &key, &meta[i].item, BPF_ANY) == 0);
+
+       table[i].UpdateAttributes(bpf_mod, i, false, 0, fd, meta_fd);
   }
 
   delete [] uuid_str;

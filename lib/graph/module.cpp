@@ -128,5 +128,11 @@ string IOModule::NameToUuid(string module_name) {
   }
   return uuid;   
 }
+void IOModule::InsertTable(Table table) {
+  tables.push_back(&table);
+}
+void IOModule::InsertEvent(Event event) {
+  events.push_back(&event);
+}
 
 }  // namespace iov
