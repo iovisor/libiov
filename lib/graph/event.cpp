@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
+#include "libiov/event.h"
+#include <arpa/inet.h>
 #include <string.h>
+#include <iomanip>   // std::setfill, std::set
+#include <iostream>  // std::cout, std::endl
 #include <memory>
 #include <vector>
-#include <arpa/inet.h>
-#include <iostream>     // std::cout, std::endl
-#include <iomanip>      // std::setfill, std::set
-#include "libiov/internal/types.h"
-#include "libiov/table.h"
 #include "libiov/filesystem.h"
+#include "libiov/internal/types.h"
 #include "libiov/metadata.h"
-#include "libiov/event.h"
+#include "libiov/table.h"
 
 using std::future;
 using std::promise;
@@ -36,22 +36,22 @@ using namespace iov::internal;
 
 namespace iov {
 
- Event::Event() {}
- Event::~Event() {}
+Event::Event() {}
+Event::~Event() {}
 
- bool Event::Load( IOModule *module, size_t index, ModuleType type) {
-    ebpf::BPFModule *bpf_mod = module->GetBpfModule();
-    switch (type) {
-    case NET_FORWARD:
-      prog_.reset(new FileDesc(bpf_prog_load(BPF_PROG_TYPE_SCHED_CLS,
-          (const struct bpf_insn *)bpf_mod->function_start(index),
-          bpf_mod->function_size(index), bpf_mod->license(), bpf_mod->kern_version(),
-          nullptr, 0)));
-      if (*prog_ >= 0)
-        return true;
-    default: {}
-    }
-    return false;
+bool Event::Load(IOModule *module, size_t index, ModuleType type) {
+  ebpf::BPFModule *bpf_mod = module->GetBpfModule();
+  switch (type) {
+  case NET_FORWARD:
+    prog_.reset(new FileDesc(bpf_prog_load(BPF_PROG_TYPE_SCHED_CLS,
+        (const struct bpf_insn *)bpf_mod->function_start(index),
+        bpf_mod->function_size(index), bpf_mod->license(),
+        bpf_mod->kern_version(), nullptr, 0)));
+    if (*prog_ >= 0)
+      return true;
+  default: {}
+  }
+  return false;
 }
 
 int Event::GetFileDescriptor() {
@@ -59,5 +59,4 @@ int Event::GetFileDescriptor() {
   return *fd;
 }
 
-} //End of namespace iov
-
+}  // End of namespace iov

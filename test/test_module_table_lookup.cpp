@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-#include <memory>
-#include <vector>
 #include <arpa/inet.h>
 #include <libiov.h>
+#include <memory>
+#include <vector>
 #include "libiov/command.h"
-#include "libiov/module.h"
 #include "libiov/filesystem.h"
 #include "libiov/metadata.h"
+#include "libiov/module.h"
 #include "libiov/table.h"
 
 #define CATCH_CONFIG_MAIN
@@ -49,9 +49,9 @@ TEST_CASE("test lookup local table element", "[module_table_lookup]") {
   std::string leaf_desc_path;
 
   tableFile.open("/var/tmp/table.txt");
-  metaFile.open("/var/tmp/meta.txt"); 
-  getline(tableFile,f_table);
-  getline(metaFile,m_data);
+  metaFile.open("/var/tmp/meta.txt");
+  getline(tableFile, f_table);
+  getline(metaFile, m_data);
   tableFile.close();
   metaFile.close();
 
@@ -63,14 +63,16 @@ TEST_CASE("test lookup local table element", "[module_table_lookup]") {
 
   std::string key_test(meta.item.key_size, '\0');
   std::string next_key_test(meta.item.key_size, '\0');
-  std::string packet(meta.item.leaf_size, '\0');;
+  std::string packet(meta.item.leaf_size, '\0');
   struct packet_ {
     uint64_t rx_pkt;
     uint64_t tx_pkt;
   } test;
 
-  REQUIRE((ret = table.GetKey(table_fd, (void *)key_test.c_str(), (void *)next_key_test.c_str())) == 0);
-  REQUIRE((ret = table.Lookup(table_fd, (void *)next_key_test.c_str(), (void *)packet.c_str())) == 0);
+  REQUIRE((ret = table.GetKey(table_fd, (void *)key_test.c_str(),
+               (void *)next_key_test.c_str())) == 0);
+  REQUIRE((ret = table.Lookup(table_fd, (void *)next_key_test.c_str(),
+               (void *)packet.c_str())) == 0);
 
   memcpy(&test, packet.data(), meta.item.leaf_size);
   REQUIRE(test.rx_pkt == 25);

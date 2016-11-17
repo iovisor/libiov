@@ -19,9 +19,9 @@
 
 #include <libiov.h>
 #include "libiov/command.h"
-#include "libiov/module.h"
 #include "libiov/filesystem.h"
 #include "libiov/metadata.h"
+#include "libiov/module.h"
 #include "libiov/table.h"
 
 #define CATCH_CONFIG_MAIN
@@ -32,7 +32,8 @@ using std::vector;
 using std::unique_ptr;
 using namespace iov;
 
-TEST_CASE("test lookup local metadata table element", "[module_table_lookup_metadata]") {
+TEST_CASE(
+    "test lookup local meta table elem", "[module_table_lookup_metadata]") {
   FileSystem fs;
   MetaData meta;
   Table table;
@@ -44,8 +45,7 @@ TEST_CASE("test lookup local metadata table element", "[module_table_lookup_meta
   uint32_t key;
 
   metaFile.open("/var/tmp/meta.txt");
- 
-  getline(metaFile,meta_path);
+  getline(metaFile, meta_path);
   metaFile.close();
 
   std::cout << "META PATH: " << meta_path << std::endl;
@@ -60,13 +60,14 @@ TEST_CASE("test lookup local metadata table element", "[module_table_lookup_meta
   REQUIRE((key_desc_fd = fs.Open(key_desc_path.c_str())) > 0);
 
   std::string key_desc(meta.item.key_desc_size, '\0');
-  REQUIRE((ret = table.Lookup(key_desc_fd, &key, (void *)key_desc.c_str())) == 0);
+  REQUIRE(
+      (ret = table.Lookup(key_desc_fd, &key, (void *)key_desc.c_str())) == 0);
 
   string leaf_desc_path = meta_path;
-  REQUIRE((fs.Replace(leaf_desc_path, "_metadata", LeafDesc)) == true);;
+  REQUIRE((fs.Replace(leaf_desc_path, "_metadata", LeafDesc)) == true);
   REQUIRE((leaf_desc_fd = fs.Open(leaf_desc_path.c_str())) > 0);
 
   std::string leaf_desc(meta.item.leaf_desc_size, '\0');
-  REQUIRE((ret = table.Lookup(leaf_desc_fd, &key, (void *)leaf_desc.c_str())) == 0);
-  
+  REQUIRE(
+      (ret = table.Lookup(leaf_desc_fd, &key, (void *)leaf_desc.c_str())) == 0);
 }

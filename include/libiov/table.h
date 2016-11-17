@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include <future>
-#include <string>
-#include <iostream>
 #include <linux/bpf.h>
+#include <future>
+#include <iostream>
+#include <string>
 
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
@@ -31,71 +31,62 @@ namespace iov {
 class IOModule;
 
 class Table {
+ public:
+  // Name of the table
+  std::string table_name;
 
-public:
+  // Key/Value pair
+  std::map<std::string, std::string> data;
 
- // Name of the table
- std::string table_name;
+  // Maximun number of propeties for a table
+  int max_size;
 
- // Key/Value pair 
- std::map<std::string, std::string> data;
+  // Define if a table is local or global
+  bool global;
 
- // Maximun number of propeties for a table
- int max_size;
+  // Flags for table accessibility. RW, Hidden etc..
+  uint8_t visibility;
 
- // Define if a table is local or global
- bool global;
+  // File descriptor of the table to store key/value
+  int table_fd;
 
- // Flags for table accessibility. RW, Hidden etc..
- uint8_t visibility;
+  // File desciptor that keeps the metadata for the table,
+  // specifically types for key and value
+  int table_meta_fd;
 
- // File descriptor of the table to store key/value
- int table_fd;
+  Table();
+  ~Table();
 
- // File desciptor that keeps the metadata for the table,
- // specifically types for key and value
- int table_meta_fd;
+  void UpdateAttributes(ebpf::BPFModule *bpf_mod, size_t index, bool scope,
+      uint8_t flags, int fd, int meta_fd);
 
- Table();
- ~Table();
+  // Api to set the table scope (local or global)
+  void SetTableScope(bool scope);
 
- void UpdateAttributes(ebpf::BPFModule *bpf_mod, 
-                       size_t index,
-                       bool scope,
-                       uint8_t flags,
-                       int fd,
-                       int meta_fd); 
+  // Api to return the table scope (local or global)
+  bool GetTableScope();
 
- // Api to set the table scope (local or global)
- void SetTableScope(bool scope);
+  // Api to gather key/value pair and size
+  int GetTableElements(std::map<std::string, std::string> &item);
 
- // Api to return the table scope (local or global)
- bool GetTableScope();
+  // Api to display key/value pair
+  int ShowTableElements();
 
- // Api to gather key/value pair and size
- int GetTableElements(std::map<std::string, std::string> &item);
+  void DumpItem(std::string item);
 
- // Api to display key/value pair
- int ShowTableElements();
+  int Insert(
+      bpf_map_type map_type, int key_size, int leaf_size, int max_entries);
 
- void DumpItem(std::string item);
+  // Api to Update an element of the table
+  int Update(int fd, void *key, void *value, uint64_t flags);
 
- // Api to Insert elements of the table
- int Insert(bpf_map_type map_type, 
-            int key_size, 
-            int leaf_size, 
-            int max_entries);
+  // Api to Delete an element of the table
+  int Delete(int fd, void *key);
 
- // Api to Update an element of the table
- int Update(int fd, void *key, void *value, uint64_t flags);
+  // Api to  Lookup an element of the table (counters etc...)
+  int Lookup(int fd, void *key, void *value);
 
- // Api to Delete an element of the table
- int Delete(int fd, void *key);
-
- // Api to  Lookup an element of the table (counters etc...)
- int Lookup(int fd, void *key, void *value);
-
- // Api to get the next key after the key of the map in fd
- int GetKey(int fd, void *key, void *next_key);
+  // Api to get the next key after the key of the map in fd
+  int GetKey(int fd, void *key, void *next_key);
 };
-} //namespace iov
+}  // namespace iov

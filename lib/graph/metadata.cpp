@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
+#include "libiov/metadata.h"
 #include <string.h>
+#include "libiov/event.h"
+#include "libiov/filesystem.h"
 #include "libiov/internal/types.h"
 #include "libiov/module.h"
-#include "libiov/metadata.h"
 #include "libiov/table.h"
-#include "libiov/filesystem.h"
-#include "libiov/event.h"
 
 using std::future;
 using std::promise;
@@ -30,8 +30,7 @@ using namespace iov::internal;
 namespace iov {
 
 MetaData::MetaData() {}
-MetaData::~MetaData() {
-}
+MetaData::~MetaData() {}
 
 void MetaData::Update(ebpf::BPFModule *bpf_mod) {
   std::string desc = bpf_mod->table_key_desc(0);
@@ -42,5 +41,4 @@ void MetaData::Update(ebpf::BPFModule *bpf_mod) {
   item.leaf_size = bpf_mod->table_leaf_size(0);
   item.leaf_desc_size = desc.length();
 }
-} //End of namespace iov
-
+}  // End of namespace iov

@@ -19,9 +19,9 @@
 
 #include <libiov.h>
 #include "libiov/command.h"
-#include "libiov/module.h"
 #include "libiov/filesystem.h"
 #include "libiov/metadata.h"
+#include "libiov/module.h"
 #include "libiov/table.h"
 
 #define CATCH_CONFIG_MAIN
@@ -46,7 +46,7 @@ TEST_CASE("test update local table element", "[module_update_get]") {
     uint64_t mac;
     int ifindex;
     int pad;
-  }host;
+  } host;
   struct packet_ {
     uint64_t rx_pkt;
     uint64_t tx_pkt;
@@ -54,7 +54,7 @@ TEST_CASE("test update local table element", "[module_update_get]") {
 
   tableFile.open("/var/tmp/table.txt");
   metaFile.open("/var/tmp/meta.txt");
- 
+
   getline(tableFile, f_table);
   getline(metaFile, f_meta);
   tableFile.close();
@@ -74,7 +74,7 @@ TEST_CASE("test update local table element", "[module_update_get]") {
   REQUIRE((ret = table.Lookup(fd_key, &key, (void *)key_desc.c_str())) == 0);
 
   string leaf_text = f_meta;
-  REQUIRE((fs.Replace(leaf_text, "_metadata", LeafDesc)) == true);;
+  REQUIRE((fs.Replace(leaf_text, "_metadata", LeafDesc)) == true);
   REQUIRE((fd_leaf = fs.Open(leaf_text.c_str())) > 0);
 
   std::string leaf_desc(meta.item.leaf_desc_size, '\0');

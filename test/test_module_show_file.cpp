@@ -17,13 +17,13 @@
 #include <memory>
 #include <vector>
 
-#include <libiov.h>
-#include "libiov/command.h"
-#include "libiov/module.h"
-#include "libiov/filesystem.h"
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
 #include <bcc/libbpf.h>
+#include <libiov.h>
+#include "libiov/command.h"
+#include "libiov/filesystem.h"
+#include "libiov/module.h"
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -39,6 +39,5 @@ TEST_CASE("test show file", "[module_show_file]") {
   std::vector<string> files;
 
   fs.Show("libiov", files);
-  fs.Delete("modules", true); 
- 
+  fs.Delete("modules", true);
 }

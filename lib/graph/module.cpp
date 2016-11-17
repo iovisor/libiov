@@ -20,11 +20,11 @@
 #include <bcc/bpf_module.h>
 #include <bcc/libbpf.h>
 
-#include "libiov/internal/types.h"
-#include "libiov/table.h"
-#include "libiov/module.h"
-#include "libiov/filesystem.h"
 #include "libiov/event.h"
+#include "libiov/filesystem.h"
+#include "libiov/internal/types.h"
+#include "libiov/module.h"
+#include "libiov/table.h"
 
 using std::future;
 using std::promise;
@@ -42,7 +42,7 @@ future<bool> IOModule::Init(string &&text) {
   future<bool> res = std::async(std::launch::async,
       [this](string &&text) -> bool {
         mod_ = make_unique<ebpf::BPFModule>(0);
-        if (mod_->load_string(text, nullptr, 0) < 0) 
+        if (mod_->load_string(text, nullptr, 0) < 0)
           return false;
         return true;
       },
@@ -50,13 +50,11 @@ future<bool> IOModule::Init(string &&text) {
   return res;
 }
 
-ebpf::BPFModule *IOModule::GetBpfModule() const {
-  return mod_.get();
-}
+ebpf::BPFModule *IOModule::GetBpfModule() const { return mod_.get(); }
 
 std::vector<Table> IOModule::ShowStates(string module_name) {
-  //Lookup the module in the filesystem
-  //return the all the table object beloging to the module
+  // Lookup the module in the filesystem
+  // return the all the table object beloging to the module
   string uuid_str;
   FileSystem fs;
   string pathname;
@@ -64,21 +62,16 @@ std::vector<Table> IOModule::ShowStates(string module_name) {
   vector<Table> tables;
   vector<string> v;
 
-
   uuid_str = NameToUuid(module_name);
-  ret = fs.MakePathName(pathname,
-                        uuid_str,
-                        TABLE,
-                        "",
-                        false);
+  ret = fs.MakePathName(pathname, uuid_str, TABLE, "", false);
   if (ret) {
-     cout << "ERROR DETECTED in making pathname" << endl;
-     return tables;
+    cout << "ERROR DETECTED in making pathname" << endl;
+    return tables;
   }
   v = fs.GetFiles(pathname);
   cout << "TABLES:" << endl;
-  for (vector<string>::const_iterator it(v.begin()), it_end(v.end()); it != it_end; ++it)
-  {
+  for (vector<string>::const_iterator it(v.begin()), it_end(v.end());
+       it != it_end; ++it) {
     cout << "  " << *it << endl;
   }
 
@@ -86,8 +79,8 @@ std::vector<Table> IOModule::ShowStates(string module_name) {
 }
 
 vector<Event> IOModule::ShowEvents(string module_name) {
-  //Lookup the module in the filesystem
-  //return the all the event object beloging to the module
+  // Lookup the module in the filesystem
+  // return the all the event object beloging to the module
   string uuid_str;
   FileSystem fs;
   string pathname;
@@ -96,26 +89,21 @@ vector<Event> IOModule::ShowEvents(string module_name) {
   vector<string> v;
 
   uuid_str = NameToUuid(module_name);
-  ret = fs.MakePathName(pathname,
-                        uuid_str,
-                        EVENT,
-                        "",
-                        false);
+  ret = fs.MakePathName(pathname, uuid_str, EVENT, "", false);
   if (ret) {
-     cout << "ERROR DETECTED in making pathname" << endl;
-     return events;
+    cout << "ERROR DETECTED in making pathname" << endl;
+    return events;
   }
 
   v = fs.GetFiles(pathname);
 
   cout << "EVENTS:" << endl;
-  for (vector<string>::const_iterator it(v.begin()), it_end(v.end()); it != it_end; ++it)
-  {
+  for (vector<string>::const_iterator it(v.begin()), it_end(v.end());
+       it != it_end; ++it) {
     cout << "  " << *it << endl;
   }
 
   return events;
-
 }
 
 string IOModule::NameToUuid(string module_name) {
@@ -126,13 +114,11 @@ string IOModule::NameToUuid(string module_name) {
   } else {
     uuid = pos->second;
   }
-  return uuid;   
+  return uuid;
 }
-void IOModule::InsertTable(Table table) {
-  tables.push_back(&table);
-}
-void IOModule::InsertEvent(Event event) {
-  events.push_back(&event);
-}
+
+void IOModule::InsertTable(Table table) { tables.push_back(&table); }
+
+void IOModule::InsertEvent(Event event) { events.push_back(&event); }
 
 }  // namespace iov

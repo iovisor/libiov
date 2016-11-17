@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
+#include "libiov/table.h"
+#include <arpa/inet.h>
 #include <string.h>
+#include <iomanip>
+#include <iostream>
 #include <memory>
 #include <vector>
-#include <arpa/inet.h>
-#include <iostream>     // std::cout, std::endl
-#include <iomanip>      // std::setfill, std::set
-#include "libiov/internal/types.h"
-#include "libiov/module.h"
-#include "libiov/table.h"
-#include "libiov/filesystem.h"
-#include "libiov/metadata.h"
 #include "libiov/event.h"
+#include "libiov/filesystem.h"
+#include "libiov/internal/types.h"
+#include "libiov/metadata.h"
+#include "libiov/module.h"
 
 using std::future;
 using std::promise;
@@ -40,151 +40,129 @@ namespace iov {
 Table::Table() {}
 Table::~Table() {}
 
-// Insert creates a Map of type bpf_map_type, with key size key_size, a value size of
-// leaf_size and the maximum amount of entries of max_entries.
+// Insert creates a Map of type bpf_map_type, with key size key_size, a value
+// size of leaf_size and the maximum amount of entries of max_entries.
 
-int Table::Insert(bpf_map_type map_type, 
-                  int key_size, 
-                  int leaf_size, 
-                  int max_entries) {
-
-     int fd;
-     fd = bpf_create_map(map_type,
-                    key_size,
-                    leaf_size,
-                    max_entries);
-     
-     return fd;
+int Table::Insert(
+    bpf_map_type map_type, int key_size, int leaf_size, int max_entries) {
+  int fd;
+  fd = bpf_create_map(map_type, key_size, leaf_size, max_entries);
+  return fd;
 }
 
 // Update updates the map in fd with the given value in the given key.
-int Table::Update(int fd , void *key, void *value, uint64_t flags) {
+int Table::Update(int fd, void *key, void *value, uint64_t flags) {
+  int ret;
+  ret = bpf_update_elem(fd, key, value, flags);
 
-     int ret;
-     ret = bpf_update_elem(fd, key, value, flags);
-
-     return ret;
+  return ret;
 }
 
-// Lookup looks up for the map value stored in fd with the given key. The value
-// is stored in the value pointer.
+// Lookup looks up for the map value stored in fd with the given key.
+// The value is stored in the value pointer.
 int Table::Lookup(int fd, void *key, void *value) {
-     int ret;
-     ret= bpf_lookup_elem(fd, key, value);
-     return ret;
+  int ret;
+  ret = bpf_lookup_elem(fd, key, value);
+  return ret;
 }
+
 // Delete deletes the map element with the given key.
 int Table::Delete(int fd, void *key) {
-     int ret;
-     ret = bpf_delete_elem(fd, key);
-     return ret;
+  int ret;
+  ret = bpf_delete_elem(fd, key);
+  return ret;
 }
 
 // GetKey stores, in next_key, the next key after the key of the map in fd.
 int Table::GetKey(int fd, void *key, void *next_key) {
-     int ret;
-     ret =  bpf_get_next_key(fd, key, next_key);
-     return ret;
+  int ret;
+  ret = bpf_get_next_key(fd, key, next_key);
+  return ret;
 }
 
 int Table::GetTableElements(std::map<std::string, std::string> &item) {
-     //Open Metadata
-     //Open Key desc optional for now
-     //Open Leaf desc optional for now
-     //lookup all the keys and return them along with values
-     int ret = 0;
-     MetaData meta;
-     int key_meta;
+  // Open Metadata
+  // Open Key desc optional for now
+  // Open Leaf desc optional for now
+  // lookup all the keys and return them along with values
+  int ret = 0;
+  MetaData meta;
+  int key_meta;
 
-     key_meta = 0;
-     ret = Lookup(table_meta_fd, &key_meta, &meta.item);
-     if (ret != 0) {
-         return ret;
-     }
+  key_meta = 0;
+  ret = Lookup(table_meta_fd, &key_meta, &meta.item);
+  if (ret != 0) {
+    return ret;
+  }
 
-     std::string key(meta.item.key_size, 'f');
-     std::string next_key(meta.item.key_size, '\0');
-     std::string leaf(meta.item.leaf_size, '\0');;
-     
-     for (;;) {
-        ret = GetKey(table_fd, 
-                     (void *)key.c_str(), 
-                     (void *)next_key.c_str());
+  std::string key(meta.item.key_size, 'f');
+  std::string next_key(meta.item.key_size, '\0');
+  std::string leaf(meta.item.leaf_size, '\0');
+  for (;;) {
+    ret = GetKey(table_fd, (void *)key.c_str(), (void *)next_key.c_str());
 
-        if (ret != 0) {
-            // Should return a value for this that is not 0
-            // since empty table are ok. Set it to 0 for now.
-            // We'll have to think about error handling later.
-            ret = 0;
-            break;
-        }
+    if (ret != 0) {
+      // Should return a value for this that is not 0
+      // since empty table are ok. Set it to 0 for now.
+      // We'll have to think about error handling later.
+      ret = 0;
+      break;
+    }
 
-        ret = Lookup(table_fd, 
-                     (void *)next_key.c_str(), 
-                     (void *)leaf.c_str());
-        if (ret != 0) {
-            return ret;
-        }
-        item[next_key] = leaf;
-        // We can fill the data
-        key = next_key;
-        
-     }
-     return ret;
+    ret = Lookup(table_fd, (void *)next_key.c_str(), (void *)leaf.c_str());
+    if (ret != 0) {
+      return ret;
+    }
+    item[next_key] = leaf;
+    // We can fill the data
+    key = next_key;
+  }
+  return ret;
 }
 
 void Table::DumpItem(std::string item) {
-     for (std::string::iterator it = item.begin() ; it != item.end(); ++it) {
-          int ch = static_cast<unsigned char>(*it);
-          std::cout << std::showbase // show the 0x prefix
-                    << std::internal // fill between the prefix and the number
-                    << std::setfill('0'); // fill with 0s
+  for (std::string::iterator it = item.begin(); it != item.end(); ++it) {
+    int ch = static_cast<unsigned char>(*it);
+    std::cout << std::showbase       // show the 0x prefix
+              << std::internal       // fill between the prefix and the number
+              << std::setfill('0');  // fill with 0s
 
-          std::cout << std::hex << std::setw(2) << ch << " ";
-     }
-     std::cout << std::endl;
+    std::cout << std::hex << std::setw(2) << ch << " ";
+  }
+  std::cout << std::endl;
 }
 
 int Table::ShowTableElements() {
-     std::map<std::string, std::string> items;
-     int ret = 0;
-     ret = GetTableElements(items);
-     if ( ret != 0 )
-        return ret;
-     std::map<std::string, std::string>::iterator it = items.begin();
-     while (it != items.end()) {
-        // Accessing KEY from element pointed by it.
-        std::string key = it->first;
-        DumpItem(it->first);
-        // Accessing VALUE from element pointed by it.
-        std::string value = it->second;
-        DumpItem(it->second);
-        std::cout << std::endl;
-        // Increment the Iterator to point to next entry
-        it++;
-     }
-     return ret;
+  std::map<std::string, std::string> items;
+  int ret = 0;
+  ret = GetTableElements(items);
+  if (ret != 0)
+    return ret;
+  std::map<std::string, std::string>::iterator it = items.begin();
+  while (it != items.end()) {
+    // Accessing KEY from element pointed by it.
+    std::string key = it->first;
+    DumpItem(it->first);
+    // Accessing VALUE from element pointed by it.
+    std::string value = it->second;
+    DumpItem(it->second);
+    std::cout << std::endl;
+    // Increment the Iterator to point to next entry
+    it++;
+  }
+  return ret;
 }
 
-void Table::SetTableScope(bool scope) {
-     global = scope;
-}
+void Table::SetTableScope(bool scope) { global = scope; }
 
-bool Table::GetTableScope() {
-     return global;
-}
+bool Table::GetTableScope() { return global; }
 
-void Table::UpdateAttributes(ebpf::BPFModule *bpf_mod, 
-                             size_t index,
-                             bool scope,
-                             uint8_t flags,
-                             int fd,
-                             int meta_fd) {
-     table_name = bpf_mod->table_name(index);
-     global = scope;
-     visibility = flags;
-     table_fd = fd;
-     table_meta_fd = meta_fd;
+void Table::UpdateAttributes(ebpf::BPFModule *bpf_mod, size_t index, bool scope,
+    uint8_t flags, int fd, int meta_fd) {
+  table_name = bpf_mod->table_name(index);
+  global = scope;
+  visibility = flags;
+  table_fd = fd;
+  table_meta_fd = meta_fd;
 }
-} //End of namespace iov
-
+}  // End of namespace iov

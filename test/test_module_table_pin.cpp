@@ -17,12 +17,12 @@
 #include <memory>
 #include <vector>
 
-#include <linux/bpf.h>
 #include <libiov.h>
+#include <linux/bpf.h>
 #include "libiov/command.h"
-#include "libiov/module.h"
 #include "libiov/filesystem.h"
 #include "libiov/metadata.h"
+#include "libiov/module.h"
 #include "libiov/table.h"
 
 #define CATCH_CONFIG_MAIN
@@ -45,7 +45,10 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   string pathname;
   std::ofstream tableFile;
   std::ofstream metaFile;
-  string text = "struct host { u64 mac; int ifindex; int pad;}; struct packet { u64 rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", struct host, struct packet, num_ports, 1);";
+  string text =
+      "struct host { u64 mac; int ifindex; int pad;}; struct packet { u64 "
+      "rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", struct host, struct packet, "
+      "num_ports, 1);";
 
   tableFile.open("/var/tmp/table.txt");
   metaFile.open("/var/tmp/meta.txt");
@@ -53,18 +56,14 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   module.Init(std::move(text));
 
   bpf_mod = module.GetBpfModule();
-   
-  fd = table.Insert(BPF_MAP_TYPE_HASH, bpf_mod->table_key_size(0), 
-                    bpf_mod->table_leaf_size(0), 1);
+  fd = table.Insert(BPF_MAP_TYPE_HASH, bpf_mod->table_key_size(0),
+      bpf_mod->table_leaf_size(0), 1);
 
   uuid_str = new char[100];
   fs.GenerateUuid(uuid_str);
 
-  REQUIRE(fs.MakePathName(pathname,
-                  uuid_str,
-                  TABLE,
-                  bpf_mod->table_name(0),
-                  false) == 0);
+  REQUIRE(fs.MakePathName(
+              pathname, uuid_str, TABLE, bpf_mod->table_name(0), false) == 0);
 
   REQUIRE(fs.Save(pathname.c_str(), bpf_mod->table_name(0), fd) == 0);
 
@@ -77,10 +76,11 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
 
   meta.Update(bpf_mod);
 
-  fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
+  fd = table.Insert(
+      BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
 
   string file_name = bpf_mod->table_name(0);
-  file_name.append("_metadata"); 
+  file_name.append("_metadata");
   REQUIRE(fs.Save(pathname.c_str(), file_name.c_str(), fd) == 0);
 
   string key_leaf_path = pathname;
@@ -90,16 +90,13 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
 
   key = 0;
   REQUIRE(table.Update(fd, &key, &meta.item, BPF_ANY) == 0);
-
   fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), table_key.length(), 1);
-
   string f_key_desc = bpf_mod->table_name(0);
   f_key_desc.append(KeyDesc);
   REQUIRE(fs.Save(pathname.c_str(), f_key_desc.c_str(), fd) == 0);
-
   REQUIRE(table.Update(fd, &key, (void *)table_key.c_str(), BPF_ANY) == 0);
-
-  fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), table_leaf.length(), 1);
+  fd =
+      table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), table_leaf.length(), 1);
 
   string f_leaf_desc = bpf_mod->table_name(0);
   f_leaf_desc.append(LeafDesc);

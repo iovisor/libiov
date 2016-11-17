@@ -17,12 +17,12 @@
 #include <memory>
 #include <vector>
 
-#include <linux/bpf.h>
 #include <libiov.h>
+#include <linux/bpf.h>
 #include "libiov/command.h"
-#include "libiov/module.h"
 #include "libiov/filesystem.h"
 #include "libiov/metadata.h"
+#include "libiov/module.h"
 #include "libiov/table.h"
 
 #define CATCH_CONFIG_MAIN
@@ -43,7 +43,9 @@ TEST_CASE("test show table", "[module_table_show]") {
   MetaData meta;
   ebpf::BPFModule *bpf_mod;
   string pathname;
-  string text = "struct packet { u64 rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", uint32_t, struct packet, interfaces, 20);";
+  string text =
+      "struct packet { u64 rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", "
+      "uint32_t, struct packet, interfaces, 20);";
 
   struct packet_ {
     uint64_t rx_pkt;
@@ -53,20 +55,17 @@ TEST_CASE("test show table", "[module_table_show]") {
   module.Init(std::move(text));
 
   bpf_mod = module.GetBpfModule();
-   
-  fd = table.Insert(BPF_MAP_TYPE_HASH, bpf_mod->table_key_size(0), 
-                    bpf_mod->table_leaf_size(0), 20);
+
+  fd = table.Insert(BPF_MAP_TYPE_HASH, bpf_mod->table_key_size(0),
+      bpf_mod->table_leaf_size(0), 20);
 
   table.table_fd = fd;
 
   uuid_str = new char[100];
   fs.GenerateUuid(uuid_str);
 
-  REQUIRE(fs.MakePathName(pathname,
-                  uuid_str,
-                  TABLE,
-                  bpf_mod->table_name(0),
-                  false) == 0);
+  REQUIRE(fs.MakePathName(
+              pathname, uuid_str, TABLE, bpf_mod->table_name(0), false) == 0);
 
   REQUIRE(fs.Save(pathname.c_str(), bpf_mod->table_name(0), fd) == 0);
 
@@ -75,11 +74,12 @@ TEST_CASE("test show table", "[module_table_show]") {
 
   meta.Update(bpf_mod);
 
-  fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
+  fd = table.Insert(
+      BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
   table.table_meta_fd = fd;
 
   string file_name = bpf_mod->table_name(0);
-  file_name.append("_metadata"); 
+  file_name.append("_metadata");
   REQUIRE(fs.Save(pathname.c_str(), file_name.c_str(), fd) == 0);
 
   key = 0;
@@ -101,6 +101,6 @@ TEST_CASE("test show table", "[module_table_show]") {
 
   REQUIRE((ret = table.ShowTableElements()) == 0);
 
-  fs.Delete("modules", true); 
+  fs.Delete("modules", true);
   delete[] uuid_str;
 }

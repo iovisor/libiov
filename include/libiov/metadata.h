@@ -16,35 +16,33 @@
 
 #pragma once
 
-#include <future>
-#include <string>
-#include <iostream>
-#include <linux/bpf.h>
-#include <cstring>
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
 #include <bcc/libbpf.h>
+#include <linux/bpf.h>
+#include <cstring>
+#include <future>
+#include <iostream>
+#include <string>
 
 #include "libiov/types.h"
 
 namespace iov {
 class IOModule;
 
- struct descr {
-   size_t key_size;
-   size_t leaf_size;
-   uint32_t key_desc_size;
-   uint32_t leaf_desc_size;
- };
+struct descr {
+  size_t key_size;
+  size_t leaf_size;
+  uint32_t key_desc_size;
+  uint32_t leaf_desc_size;
+};
 
 class MetaData {
+ public:
+  struct descr item;
 
-public:
-
- struct descr item;
-
- MetaData();
- ~MetaData();
- void Update(ebpf::BPFModule *bpf_mod);
+  MetaData();
+  ~MetaData();
+  void Update(ebpf::BPFModule *bpf_mod);
 };
-} //namespace iov
+}  // namespace iov

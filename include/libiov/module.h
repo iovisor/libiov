@@ -16,13 +16,13 @@
 
 #pragma once
 
+#include <uuid/uuid.h>
 #include <future>
 #include <string>
-#include <uuid/uuid.h>
 
-#include "libiov/types.h"
-#include "libiov/table.h"
 #include "libiov/event.h"
+#include "libiov/table.h"
+#include "libiov/types.h"
 
 namespace ebpf {
 class BPFModule;
@@ -34,14 +34,14 @@ class Table;
 class Event;
 
 class IOModule {
- // IOModule should be a collection of tables and/or events, where tables
- // collect the states of a module (counters, lookups etc..) and events
- // are the ingress and egress packet, kprobe etc... handlers
+  // IOModule should be a collection of tables and/or events, where tables
+  // collect the states of a module (counters, lookups etc..) and events
+  // are the ingress and egress packet, kprobe etc... handlers
 
  private:
   std::unique_ptr<ebpf::BPFModule> mod_;
-  std::vector<Table*> tables;
-  std::vector<Event*> events;
+  std::vector<Table *> tables;
+  std::vector<Event *> events;
 
  public:
   IOModule();
@@ -67,7 +67,6 @@ class IOModule {
 
   // Api to display all events for a module
   std::vector<Event> ShowEvents(std::string module_name);
-
 };
 
 }  // namespace iov

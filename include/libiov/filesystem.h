@@ -19,12 +19,12 @@
 
 #include <dirent.h>
 #include <sys/stat.h>
-#include <future>
-#include <string>
-#include <iostream>
-#include <fstream>
 #include <uuid/uuid.h>
 #include <boost/filesystem.hpp>
+#include <fstream>
+#include <future>
+#include <iostream>
+#include <string>
 
 // Requires the following module to be install
 // apt-get install libboost-filesystem-dev
@@ -32,28 +32,25 @@
 
 #include "libiov/types.h"
 
-#define LibiovRootPath    "/sys/fs/bpf/libiov/"
-#define GlobalTablePath   "/sys/fs/bpf/libiov/tables/"
-#define ModulePath        "/sys/fs/bpf/libiov/modules/"
+#define LibiovRootPath "/sys/fs/bpf/libiov/"
+#define GlobalTablePath "/sys/fs/bpf/libiov/tables/"
+#define ModulePath "/sys/fs/bpf/libiov/modules/"
 
-#define ModuleEventPath   "/events/"
-#define StatePath         "/state/"  
-#define MetadataPath      "metadata/"
-#define KeyDesc           "_key_desc"
-#define LeafDesc          "_leaf_desc" 
-#define UUID_LEN          100
+#define ModuleEventPath "/events/"
+#define StatePath "/state/"
+#define MetadataPath "metadata/"
+#define KeyDesc "_key_desc"
+#define LeafDesc "_leaf_desc"
+#define UUID_LEN 100
 
 namespace iov {
-  class IOModule;
 
-enum obj_type_t{
-  EVENT = 1,
-  TABLE
-};
+class IOModule;
+
+enum obj_type_t { EVENT = 1, TABLE };
 
 class FileSystem {
-
-  // Root of the filesystem is /sys/fs/bpf/libiov. 
+  // Root of the filesystem is /sys/fs/bpf/libiov.
   // Ex: ls /sys/fs/bpf/libiov
   // tables/ modules/
   // Tables will have all the global tables, shared or not by IOModules
@@ -68,12 +65,12 @@ class FileSystem {
   // Libiov has the metadata for each table under state/
 
   void ProcessEntry(std::string directory, std::vector<std::string> &files);
-  void ProcessEntity(struct dirent* entity, std::vector<std::string> &files);
+  void ProcessEntity(struct dirent *entity, std::vector<std::string> &files);
   void ProcessFile(std::string file, std::vector<std::string> &files);
   bool dirExists(std::string dir_path);
   int DeleteFilesInDirectory(std::string dirpath, bool recursive);
-  std::string root_path; 
- 
+  std::string root_path;
+
  public:
   FileSystem();
   ~FileSystem();
@@ -83,12 +80,10 @@ class FileSystem {
   int Delete(std::string pathname, bool recursive);
   void GenerateUuid(char *uuid_str);
   int CreateDir(std::string path);
-  int MakePathName(std::string &pathname,
-                    std::string uuid,
-                    obj_type_t obj_type,
-                    std::string name,
-                    bool global);
-  bool Replace(std::string& str, const std::string& from, const std::string& to);
+  int MakePathName(std::string &pathname, std::string uuid, obj_type_t obj_type,
+      std::string name, bool global);
+  bool Replace(
+      std::string &str, const std::string &from, const std::string &to);
   std::vector<std::string> GetFiles(std::string pathname);
 };
-} // namespace iov
+}  // namespace iov

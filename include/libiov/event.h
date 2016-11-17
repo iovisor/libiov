@@ -18,11 +18,11 @@
 #pragma once
 
 #include <future>
-#include <string>
 #include <iostream>
+#include <string>
 
-#include "libiov/types.h"
 #include "libiov/module.h"
+#include "libiov/types.h"
 
 namespace ebpf {
 class BPFModule;
@@ -32,34 +32,35 @@ namespace iov {
 class IOModule;
 
 class Event {
-private:
+ private:
   FileDescPtr prog_;
 
-public:
+ public:
   enum ModuleType {
     NET_FORWARD,
     NET_POLICY,
   };
 
- // Name of the event
- std::string event_name;
+  // Name of the event
+  std::string event_name;
 
- // File descriptor of the event to store 
- int event_fd;
+  // File descriptor of the event to store
+  int event_fd;
 
- // cls_bpf, xdp etc...
- int event_type;
+  // cls_bpf, xdp etc...
+  int event_type;
 
- // handler for ingress or egress
- int direction;
+  // handler for ingress or egress
+  int direction;
 
- Event();
- ~Event();
+  Event();
+  ~Event();
 
- // Api to load the event in kernel
- bool Load( IOModule *module, size_t index, ModuleType type);
+  // Api to load the event in kernel
+  bool Load(IOModule *module, size_t index, ModuleType type);
 
- // Api to return the file descriptor
- int GetFileDescriptor();
+  // Api to return the file descriptor
+  int GetFileDescriptor();
 };
-} //namespace iov
+
+}  // namespace iov

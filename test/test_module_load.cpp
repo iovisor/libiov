@@ -17,15 +17,15 @@
 #include <memory>
 #include <vector>
 
-#include <libiov.h>
-#include "libiov/command.h"
-#include "libiov/module.h"
-#include "libiov/event.h"
-#include "libiov/filesystem.h"
-#include "libiov/metadata.h"
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
 #include <bcc/libbpf.h>
+#include <libiov.h>
+#include "libiov/command.h"
+#include "libiov/event.h"
+#include "libiov/filesystem.h"
+#include "libiov/metadata.h"
+#include "libiov/module.h"
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -35,7 +35,7 @@ using std::vector;
 using std::unique_ptr;
 using namespace iov;
 
-TEST_CASE("test load and save module fds' (states and events) to filesystem", "[module_load]") {
+TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
   char *uuid_str = NULL;
   int fd, meta_fd;
   FileSystem fs;
@@ -44,7 +44,13 @@ TEST_CASE("test load and save module fds' (states and events) to filesystem", "[
   MetaData *meta;
   ebpf::BPFModule *bpf_mod;
   string pathname;
-  string text = "struct interfaces{ u32 rx_pkt; u32 tx_pkt; }; struct packet { u64 rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", uint32_t, struct packet, num_ports, 1); BPF_TABLE(\"hash\", uint32_t, struct interfaces, ifindex, 1); int one(void *ctx) { return 0; } int two(void *ctx) { return 0; } int three(void *ctx) { return 0; }";
+  string text =
+      "struct interfaces{ u32 rx_pkt; u32 tx_pkt; }; struct packet { u64 "
+      "rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", uint32_t, struct packet, "
+      "num_ports, 1); BPF_TABLE(\"hash\", uint32_t, struct interfaces, "
+      "ifindex, 1); int one(void *ctx) { return 0; } int two(void *ctx) { "
+      "return 0; } int three(void *ctx) { return 0; }";
+
   std::ofstream uuidFile, moduleFile, tableFile, metaFile;
 
   moduleFile.open("/var/tmp/module.txt");
@@ -69,21 +75,18 @@ TEST_CASE("test load and save module fds' (states and events) to filesystem", "[
   uuidFile << uuid_str;
 
   for (size_t i = 0; i < num_funcs; i++) {
-       pathname.clear();
-       REQUIRE(event_list[i].Load(mod.get(), 0, Event::NET_FORWARD) == true);
-       REQUIRE(fs.MakePathName(pathname,
-               uuid_str,
-               EVENT,
-               bpf_mod->function_name(i),
-               true) == 0);
+    pathname.clear();
+    REQUIRE(event_list[i].Load(mod.get(), 0, Event::NET_FORWARD) == true);
+    REQUIRE(fs.MakePathName(pathname, uuid_str, EVENT,
+                bpf_mod->function_name(i), true) == 0);
 
-       fd = event_list[i].GetFileDescriptor();
+    fd = event_list[i].GetFileDescriptor();
 
-       REQUIRE(fs.Save(pathname.c_str(), bpf_mod->function_name(i), fd) == 0);
+    REQUIRE(fs.Save(pathname.c_str(), bpf_mod->function_name(i), fd) == 0);
 
-       pathname.append(bpf_mod->function_name(i));
+    pathname.append(bpf_mod->function_name(i));
 
-       moduleFile << pathname.c_str() << std::endl;
+    moduleFile << pathname.c_str() << std::endl;
   }
 
   table = new Table[num_tables];
@@ -96,45 +99,43 @@ TEST_CASE("test load and save module fds' (states and events) to filesystem", "[
   uint32_t key;
 
   for (size_t i = 0; i < num_tables; i++) {
-       pathname.clear();
-       std::cout << "TABLE TYPE: " << bpf_mod->table_type(i) << std::endl;
-       fd = table[i].Insert((bpf_map_type) (bpf_mod->table_type(i)), bpf_mod->table_key_size(i),
-                    bpf_mod->table_leaf_size(i), 1);
+    pathname.clear();
+    std::cout << "TABLE TYPE: " << bpf_mod->table_type(i) << std::endl;
+    fd = table[i].Insert((bpf_map_type)(bpf_mod->table_type(i)),
+        bpf_mod->table_key_size(i), bpf_mod->table_leaf_size(i), 1);
 
-       REQUIRE(fs.MakePathName(pathname,
-               uuid_str,
-               TABLE,
-               bpf_mod->table_name(i),
-               false) == 0);
-       REQUIRE(fs.Save(pathname.c_str(), bpf_mod->table_name(i), fd) == 0);
+    REQUIRE(fs.MakePathName(
+                pathname, uuid_str, TABLE, bpf_mod->table_name(i), false) == 0);
+    REQUIRE(fs.Save(pathname.c_str(), bpf_mod->table_name(i), fd) == 0);
 
-       table_file_name = pathname;
-       table_file_name.append(bpf_mod->table_name(i));
-       tableFile << table_file_name.c_str() << std::endl;
+    table_file_name = pathname;
+    table_file_name.append(bpf_mod->table_name(i));
+    tableFile << table_file_name.c_str() << std::endl;
 
-       meta[i].Update(bpf_mod);
+    meta[i].Update(bpf_mod);
 
-       meta_fd = table[i].Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
+    meta_fd = table[i].Insert(
+        BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
 
-       meta_file_name = bpf_mod->table_name(i);
-       meta_file_name.append("_metadata");
+    meta_file_name = bpf_mod->table_name(i);
+    meta_file_name.append("_metadata");
 
-       REQUIRE(fs.Save(pathname.c_str(), meta_file_name.c_str(), fd) == 0);
+    REQUIRE(fs.Save(pathname.c_str(), meta_file_name.c_str(), fd) == 0);
 
-       key_leaf_path = pathname;
-       key_leaf_path.append(meta_file_name);
+    key_leaf_path = pathname;
+    key_leaf_path.append(meta_file_name);
 
-       metaFile << key_leaf_path.c_str() << std::endl;
-       key = 0;
-       REQUIRE(table[i].Update(fd, &key, &meta[i].item, BPF_ANY) == 0);
+    metaFile << key_leaf_path.c_str() << std::endl;
+    key = 0;
+    REQUIRE(table[i].Update(fd, &key, &meta[i].item, BPF_ANY) == 0);
 
-       table[i].UpdateAttributes(bpf_mod, i, false, 0, fd, meta_fd);
+    table[i].UpdateAttributes(bpf_mod, i, false, 0, fd, meta_fd);
   }
 
-  delete [] uuid_str;
-  delete [] event_list;
-  delete [] table;
-  delete [] meta;
+  delete[] uuid_str;
+  delete[] event_list;
+  delete[] table;
+  delete[] meta;
   moduleFile.close();
   tableFile.close();
   metaFile.close();

@@ -17,13 +17,13 @@
 #include <memory>
 #include <vector>
 
-#include <libiov.h>
-#include "libiov/command.h"
-#include "libiov/module.h"
-#include "libiov/filesystem.h"
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
 #include <bcc/libbpf.h>
+#include <libiov.h>
+#include "libiov/command.h"
+#include "libiov/filesystem.h"
+#include "libiov/module.h"
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -44,12 +44,12 @@ TEST_CASE("test show module attributes", "[module_show]") {
   vector<Event> events;
 
   uuidFile.open("/var/tmp/uuid.txt");
-  getline(uuidFile,uuid_str);
+  getline(uuidFile, uuid_str);
   uuidFile.close();
 
   module.prog_uuid[module_name] = uuid_str;
-  uuid_test = module.NameToUuid(module_name); 
-  REQUIRE( uuid_test == uuid_str);
+  uuid_test = module.NameToUuid(module_name);
+  REQUIRE(uuid_test == uuid_str);
 
   tables = module.ShowStates(module_name);
   events = module.ShowEvents(module_name);
