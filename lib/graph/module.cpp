@@ -15,6 +15,7 @@
  */
 
 #include <linux/bpf.h>
+#include <memory>
 
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
@@ -36,9 +37,10 @@ using namespace std;
 namespace iov {
 
 IOModule::IOModule() {}
+IOModule::IOModule(string module_name) {name=module_name;}
 IOModule::~IOModule() {}
 
-future<bool> IOModule::Init(string &&text) {
+bool IOModule::Init(string &&text, ModuleType type) {
   future<bool> res = std::async(std::launch::async,
       [this](string &&text) -> bool {
         mod_ = make_unique<ebpf::BPFModule>(0);
@@ -47,7 +49,37 @@ future<bool> IOModule::Init(string &&text) {
         return true;
       },
       std::move(text));
-  return res;
+  
+  bool ret = res.get();
+  if (!ret)
+    return false;
+
+  return Load(type);
+}
+
+bool IOModule::Load(ModuleType type) {
+
+  bool ret = true;
+  //Event *event;
+  //Table *table;
+  FileSystem fs;
+
+  num_functions = mod_->num_functions();
+  num_tables = mod_->num_tables();
+
+  fs.GenerateUuid(uuid);
+
+  for (size_t i = 0; i < num_functions; i++) {
+    // In this construnctor we can pass some arg
+    std::unique_ptr<Event> ev = make_unique<Event>();
+    Event *ev_tmp = ev.get();
+    event[mod_->function_name(i)] = std::move(ev);
+
+    ret = ev_tmp->Load(this, i, type);
+    if (!ret)
+      cout << "Error in loading event: " << mod_->function_name(i) << endl;
+  }
+  return ret;
 }
 
 ebpf::BPFModule *IOModule::GetBpfModule() const { return mod_.get(); }
@@ -58,17 +90,18 @@ std::vector<Table> IOModule::ShowStates(string module_name) {
   string uuid_str;
   FileSystem fs;
   string pathname;
-  int ret;
+  bool ret;
   vector<Table> tables;
   vector<string> v;
+  path p;
 
   uuid_str = NameToUuid(module_name);
-  ret = fs.MakePathName(pathname, uuid_str, TABLE, "", false);
-  if (ret) {
+  ret = fs.MakePathName(p, uuid_str, TABLE, "", false);
+  if (!ret) {
     cout << "ERROR DETECTED in making pathname" << endl;
     return tables;
   }
-  v = fs.GetFiles(pathname);
+  v = fs.GetFiles(p);
   cout << "TABLES:" << endl;
   for (vector<string>::const_iterator it(v.begin()), it_end(v.end());
        it != it_end; ++it) {
@@ -84,18 +117,19 @@ vector<Event> IOModule::ShowEvents(string module_name) {
   string uuid_str;
   FileSystem fs;
   string pathname;
-  int ret;
+  bool ret;
   vector<Event> events;
   vector<string> v;
+  path p;
 
   uuid_str = NameToUuid(module_name);
-  ret = fs.MakePathName(pathname, uuid_str, EVENT, "", false);
+  ret = fs.MakePathName(p, uuid_str, EVENT, "", false);
   if (ret) {
     cout << "ERROR DETECTED in making pathname" << endl;
     return events;
   }
 
-  v = fs.GetFiles(pathname);
+  v = fs.GetFiles(p);
 
   cout << "EVENTS:" << endl;
   for (vector<string>::const_iterator it(v.begin()), it_end(v.end());
@@ -108,11 +142,11 @@ vector<Event> IOModule::ShowEvents(string module_name) {
 
 string IOModule::NameToUuid(string module_name) {
   map<string, string>::const_iterator pos = prog_uuid.find(module_name);
-  string uuid;
+  string uuid_str;
   if (pos == prog_uuid.end()) {
-    uuid.empty();
+    uuid_str.empty();
   } else {
-    uuid = pos->second;
+    uuid_str = pos->second;
   }
   return uuid;
 }

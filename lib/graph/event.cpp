@@ -33,6 +33,8 @@ using std::vector;
 using std::unique_ptr;
 
 using namespace iov::internal;
+using namespace std;
+using namespace boost::filesystem;
 
 namespace iov {
 
@@ -40,6 +42,11 @@ Event::Event() {}
 Event::~Event() {}
 
 bool Event::Load(IOModule *module, size_t index, ModuleType type) {
+  FileSystem fs;
+  path p;
+  int ret = 0;
+  bool success = true;
+
   ebpf::BPFModule *bpf_mod = module->GetBpfModule();
   switch (type) {
   case NET_FORWARD:
@@ -47,11 +54,26 @@ bool Event::Load(IOModule *module, size_t index, ModuleType type) {
         (const struct bpf_insn *)bpf_mod->function_start(index),
         bpf_mod->function_size(index), bpf_mod->license(),
         bpf_mod->kern_version(), nullptr, 0)));
-    if (*prog_ >= 0)
-      return true;
+    if (*prog_ < 0)
+      return false;
+    break;
   default: {}
   }
-  return false;
+
+  ret = fs.MakePathName(p, module->uuid, EVENT,
+            bpf_mod->function_name(index), true);
+
+  if (!success) {
+    std::cout << "Create dir failed" << std::endl;
+    return success;
+  }
+
+  ret = fs.Save(p, bpf_mod->function_name(index), *prog_);
+  if (ret < 0) {
+    std::cout << "Failed to pin: " << bpf_mod->function_name(index) << std::endl;
+    return false;
+  }
+  return true;
 }
 
 int Event::GetFileDescriptor() {

@@ -32,6 +32,7 @@ using std::string;
 using std::vector;
 using std::unique_ptr;
 using namespace iov;
+using namespace boost::filesystem;
 
 TEST_CASE("test table loading and saving", "[module_table_pin]") {
   char *uuid_str = NULL;
@@ -42,7 +43,8 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   IOModule module;
   MetaData meta;
   ebpf::BPFModule *bpf_mod;
-  string pathname;
+  path p;
+
   std::ofstream tableFile;
   std::ofstream metaFile;
   string text =
@@ -53,21 +55,22 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   tableFile.open("/var/tmp/table.txt");
   metaFile.open("/var/tmp/meta.txt");
 
-  module.Init(std::move(text));
+  module.Init(std::move(text), NET_FORWARD);
 
   bpf_mod = module.GetBpfModule();
   fd = table.Insert(BPF_MAP_TYPE_HASH, bpf_mod->table_key_size(0),
       bpf_mod->table_leaf_size(0), 1);
 
   uuid_str = new char[100];
-  fs.GenerateUuid(uuid_str);
+  // DAVIDE comment for now
+  //fs.GenerateUuid(uuid_str);
 
   REQUIRE(fs.MakePathName(
-              pathname, uuid_str, TABLE, bpf_mod->table_name(0), false) == 0);
+              p, uuid_str, TABLE, bpf_mod->table_name(0), false) == 0);
 
-  REQUIRE(fs.Save(pathname.c_str(), bpf_mod->table_name(0), fd) == 0);
+  REQUIRE(fs.Save(p, bpf_mod->table_name(0), fd) == 0);
 
-  string file_to_save = pathname;
+  string file_to_save = p.string();
   file_to_save.append(bpf_mod->table_name(0));
   tableFile << file_to_save.c_str();
 
@@ -81,9 +84,9 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
 
   string file_name = bpf_mod->table_name(0);
   file_name.append("_metadata");
-  REQUIRE(fs.Save(pathname.c_str(), file_name.c_str(), fd) == 0);
+  REQUIRE(fs.Save(p, file_name.c_str(), fd) == 0);
 
-  string key_leaf_path = pathname;
+  string key_leaf_path = p.string();
   key_leaf_path.append(file_name);
 
   metaFile << key_leaf_path.c_str();
@@ -93,14 +96,14 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   fd = table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), table_key.length(), 1);
   string f_key_desc = bpf_mod->table_name(0);
   f_key_desc.append(KeyDesc);
-  REQUIRE(fs.Save(pathname.c_str(), f_key_desc.c_str(), fd) == 0);
+  REQUIRE(fs.Save(p, f_key_desc.c_str(), fd) == 0);
   REQUIRE(table.Update(fd, &key, (void *)table_key.c_str(), BPF_ANY) == 0);
   fd =
       table.Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), table_leaf.length(), 1);
 
   string f_leaf_desc = bpf_mod->table_name(0);
   f_leaf_desc.append(LeafDesc);
-  REQUIRE(fs.Save(pathname.c_str(), f_leaf_desc.c_str(), fd) == 0);
+  REQUIRE(fs.Save(p, f_leaf_desc.c_str(), fd) == 0);
 
   REQUIRE(table.Update(fd, &key, (void *)table_leaf.c_str(), BPF_ANY) == 0);
 

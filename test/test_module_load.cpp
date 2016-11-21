@@ -36,7 +36,6 @@ using std::unique_ptr;
 using namespace iov;
 
 TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
-  char *uuid_str = NULL;
   int fd, meta_fd;
   FileSystem fs;
   Event *event_list;
@@ -59,83 +58,65 @@ TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
   uuidFile.open("/var/tmp/uuid.txt");
 
   auto mod = unique_ptr<IOModule>(new IOModule());
-  REQUIRE(mod->Init(std::move(text)).get() == true);
+  REQUIRE(mod->Init(std::move(text), NET_FORWARD) == true);
 
   bpf_mod = mod->GetBpfModule();
   size_t num_funcs = bpf_mod->num_functions();
   size_t num_tables = bpf_mod->num_tables();
 
-  uuid_str = new char[UUID_LEN];
+  uuidFile << mod->uuid;
 
-  std::cout << "NUMBER OF FUNCTIONS: " << num_funcs << std::endl;
+  //pathname.append(bpf_mod->function_name(i));
 
-  event_list = new Event[num_funcs];
-  memset(uuid_str, 0, UUID_LEN);
-  fs.GenerateUuid(uuid_str);
-  uuidFile << uuid_str;
+  //moduleFile << EVENT_PATHNAME for each function
+  //moduleFile << pathname.c_str() << std::endl;
 
-  for (size_t i = 0; i < num_funcs; i++) {
-    pathname.clear();
-    REQUIRE(event_list[i].Load(mod.get(), 0, Event::NET_FORWARD) == true);
-    REQUIRE(fs.MakePathName(pathname, uuid_str, EVENT,
-                bpf_mod->function_name(i), true) == 0);
+  // To test LATER
+  //table = new Table[num_tables];
+  //meta = new MetaData[num_tables];
 
-    fd = event_list[i].GetFileDescriptor();
+  //std::cout << "NUMBER OF TABLES: " << num_tables << std::endl;
+  //string meta_file_name;
+  //string table_file_name;
+  //string key_leaf_path;
+  //uint32_t key;
 
-    REQUIRE(fs.Save(pathname.c_str(), bpf_mod->function_name(i), fd) == 0);
+  //for (size_t i = 0; i < num_tables; i++) {
+//    pathname.clear();
+  //  std::cout << "TABLE TYPE: " << bpf_mod->table_type(i) << std::endl;
+    //fd = table[i].Insert((bpf_map_type)(bpf_mod->table_type(i)),
+      //  bpf_mod->table_key_size(i), bpf_mod->table_leaf_size(i), 1);
 
-    pathname.append(bpf_mod->function_name(i));
+    //REQUIRE(fs.MakePathName(
+      //          pathname, uuid_str, TABLE, bpf_mod->table_name(i), false) == 0);
+    //REQUIRE(fs.Save(pathname.c_str(), bpf_mod->table_name(i), fd) == 0);
 
-    moduleFile << pathname.c_str() << std::endl;
-  }
+    //table_file_name = pathname;
+    //table_file_name.append(bpf_mod->table_name(i));
+    //tableFile << table_file_name.c_str() << std::endl;
 
-  table = new Table[num_tables];
-  meta = new MetaData[num_tables];
+    //meta[i].Update(bpf_mod);
 
-  std::cout << "NUMBER OF TABLES: " << num_tables << std::endl;
-  string meta_file_name;
-  string table_file_name;
-  string key_leaf_path;
-  uint32_t key;
+    //meta_fd = table[i].Insert(
+      //  BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
 
-  for (size_t i = 0; i < num_tables; i++) {
-    pathname.clear();
-    std::cout << "TABLE TYPE: " << bpf_mod->table_type(i) << std::endl;
-    fd = table[i].Insert((bpf_map_type)(bpf_mod->table_type(i)),
-        bpf_mod->table_key_size(i), bpf_mod->table_leaf_size(i), 1);
+    //meta_file_name = bpf_mod->table_name(i);
+    //meta_file_name.append("_metadata");
 
-    REQUIRE(fs.MakePathName(
-                pathname, uuid_str, TABLE, bpf_mod->table_name(i), false) == 0);
-    REQUIRE(fs.Save(pathname.c_str(), bpf_mod->table_name(i), fd) == 0);
+    //REQUIRE(fs.Save(pathname.c_str(), meta_file_name.c_str(), fd) == 0);
 
-    table_file_name = pathname;
-    table_file_name.append(bpf_mod->table_name(i));
-    tableFile << table_file_name.c_str() << std::endl;
+    //key_leaf_path = pathname;
+    //key_leaf_path.append(meta_file_name);
 
-    meta[i].Update(bpf_mod);
+    //metaFile << key_leaf_path.c_str() << std::endl;
+    //key = 0;
+    //REQUIRE(table[i].Update(fd, &key, &meta[i].item, BPF_ANY) == 0);
 
-    meta_fd = table[i].Insert(
-        BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
+    //table[i].UpdateAttributes(bpf_mod, i, false, 0, fd, meta_fd);
+  //}
 
-    meta_file_name = bpf_mod->table_name(i);
-    meta_file_name.append("_metadata");
-
-    REQUIRE(fs.Save(pathname.c_str(), meta_file_name.c_str(), fd) == 0);
-
-    key_leaf_path = pathname;
-    key_leaf_path.append(meta_file_name);
-
-    metaFile << key_leaf_path.c_str() << std::endl;
-    key = 0;
-    REQUIRE(table[i].Update(fd, &key, &meta[i].item, BPF_ANY) == 0);
-
-    table[i].UpdateAttributes(bpf_mod, i, false, 0, fd, meta_fd);
-  }
-
-  delete[] uuid_str;
-  delete[] event_list;
-  delete[] table;
-  delete[] meta;
+  //delete[] table;
+  //delete[] meta;
   moduleFile.close();
   tableFile.close();
   metaFile.close();

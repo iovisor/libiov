@@ -19,6 +19,11 @@
 #include <unistd.h>
 #include <memory>
 
+enum ModuleType {
+  NET_FORWARD,
+  NET_POLICY,
+};
+
 namespace iov {
 
 namespace internal {

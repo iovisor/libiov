@@ -17,6 +17,8 @@
 #pragma once
 
 #include <uuid/uuid.h>
+#include <boost/filesystem.hpp>
+#include <uuid/uuid.h>
 #include <future>
 #include <string>
 
@@ -40,13 +42,21 @@ class IOModule {
 
  private:
   std::unique_ptr<ebpf::BPFModule> mod_;
+  std::map<const std::string, std::unique_ptr<Event>> event;
   std::vector<Table *> tables;
   std::vector<Event *> events;
 
  public:
   IOModule();
+  IOModule(std::string module_name);
   ~IOModule();
-  std::future<bool> Init(std::string &&text);
+
+  std::string uuid;
+  size_t num_functions;
+  size_t num_tables;
+
+  bool Load(ModuleType type);
+  bool Init(std::string &&text, ModuleType type);
   ebpf::BPFModule *GetBpfModule() const;
 
   // Random number that uniquily identify a module. Look at filestem.h

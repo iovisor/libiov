@@ -32,6 +32,7 @@ using std::string;
 using std::vector;
 using std::unique_ptr;
 using namespace iov;
+using namespace boost::filesystem;
 
 TEST_CASE("test show table", "[module_table_show]") {
   char *uuid_str = NULL;
@@ -42,7 +43,8 @@ TEST_CASE("test show table", "[module_table_show]") {
   IOModule module;
   MetaData meta;
   ebpf::BPFModule *bpf_mod;
-  string pathname;
+  path p;
+
   string text =
       "struct packet { u64 rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", "
       "uint32_t, struct packet, interfaces, 20);";
@@ -52,7 +54,7 @@ TEST_CASE("test show table", "[module_table_show]") {
     uint64_t tx_pkt;
   } packet;
 
-  module.Init(std::move(text));
+  module.Init(std::move(text), NET_FORWARD);
 
   bpf_mod = module.GetBpfModule();
 
@@ -62,12 +64,13 @@ TEST_CASE("test show table", "[module_table_show]") {
   table.table_fd = fd;
 
   uuid_str = new char[100];
-  fs.GenerateUuid(uuid_str);
+  // DAVIDE COMM for now
+  //fs.GenerateUuid(uuid_str);
 
   REQUIRE(fs.MakePathName(
-              pathname, uuid_str, TABLE, bpf_mod->table_name(0), false) == 0);
+              p, uuid_str, TABLE, bpf_mod->table_name(0), false) == 0);
 
-  REQUIRE(fs.Save(pathname.c_str(), bpf_mod->table_name(0), fd) == 0);
+  REQUIRE(fs.Save(p, bpf_mod->table_name(0), fd) == 0);
 
   string table_key = bpf_mod->table_key_desc(0);
   string table_leaf = bpf_mod->table_leaf_desc(0);
@@ -80,7 +83,7 @@ TEST_CASE("test show table", "[module_table_show]") {
 
   string file_name = bpf_mod->table_name(0);
   file_name.append("_metadata");
-  REQUIRE(fs.Save(pathname.c_str(), file_name.c_str(), fd) == 0);
+  REQUIRE(fs.Save(p, file_name.c_str(), fd) == 0);
 
   key = 0;
   REQUIRE(table.Update(fd, &key, &meta.item, BPF_ANY) == 0);

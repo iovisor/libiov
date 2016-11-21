@@ -74,16 +74,16 @@ class FileSystem {
  public:
   FileSystem();
   ~FileSystem();
-  int Save(std::string pathname, std::string file_name, int fd);
+  int Save(boost::filesystem::path p, std::string file_name, int fd);
   int Open(std::string pathname);
   void Show(std::string pathname, std::vector<std::string> &files);
   int Delete(std::string pathname, bool recursive);
-  void GenerateUuid(char *uuid_str);
+  void GenerateUuid(std::string &uuid_str);
   int CreateDir(std::string path);
-  int MakePathName(std::string &pathname, std::string uuid, obj_type_t obj_type,
+  bool MakePathName(boost::filesystem::path &p, std::string uuid, obj_type_t obj_type,
       std::string name, bool global);
   bool Replace(
       std::string &str, const std::string &from, const std::string &to);
-  std::vector<std::string> GetFiles(std::string pathname);
+  std::vector<std::string> GetFiles(boost::filesystem::path p);
 };
 }  // namespace iov

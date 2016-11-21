@@ -45,9 +45,10 @@ FileSystem::~FileSystem() {}
  * file_name is the file where the fd will be save
  */
 
-int FileSystem::Save(string pathname, string file_name, int fd) {
+int FileSystem::Save(path p, string file_name, int fd) {
   int ret = 0;
   const char *file = NULL;
+  string pathname = p.string();
   pathname.append(file_name);
   file = pathname.c_str();
   ret = bpf_obj_pin(fd, file);
@@ -197,10 +198,13 @@ int FileSystem::Delete(string pathname, bool recursive) {
   return 0;
 }
 
-void FileSystem::GenerateUuid(char *uuid_str) {
+void FileSystem::GenerateUuid(string &uuid) {
   uuid_t id1;
+  char *uuid_str = new char[UUID_LEN];
   uuid_generate((unsigned char *)&id1);
   uuid_unparse(id1, uuid_str);
+  uuid = uuid_str;
+  delete[] uuid_str;
 }
 
 bool FileSystem::Replace(string &str, const string &from, const string &to) {
@@ -223,50 +227,49 @@ int FileSystem::CreateDir(string dirpath) {
   return ret;
 }
 
-int FileSystem::MakePathName(string &pathname, string uuid, obj_type_t obj_type,
+bool FileSystem::MakePathName(path &p, string uuid, obj_type_t obj_type,
     string name, bool global) {
-  int ret = 0;
+  string pathname;
+
   switch (obj_type) {
   case EVENT: {
     pathname = ModulePath;
     pathname.append(uuid).append(ModuleEventPath);
-    ret = CreateDir(pathname);
   } break;
   case TABLE: {
     if (global) {
       pathname = GlobalTablePath;
       pathname.append(uuid);
-      ret = CreateDir(pathname);
     } else {
       pathname = ModulePath;
       pathname.append(uuid).append(StatePath);
-      ret = CreateDir(pathname);
     }
   } break;
   default:
-    ret = -1;
-    return ret;
+    return false;
   }
 
-  if (ret) {
+  
+  p = pathname.c_str();
+
+  if (create_directories(p)) {
     cout << "mkdir " << pathname << " failed: " << strerror(errno) << endl;
-    return ret;
+    return false;
   }
 
   if (!name.empty()) {
     pathname.append(name).append("/");
-    ret = CreateDir(pathname);
-    if (ret) {
+    p = pathname.c_str();
+    if (create_directories(p)) {
       cout << "mkdir " << pathname << " failed: " << strerror(errno) << endl;
-      return ret;
+      return false;
     }
   }
 
-  return ret;
+  return true;
 }
 
-vector<string> FileSystem::GetFiles(string pathname) {
-  path p = pathname.c_str();
+vector<string> FileSystem::GetFiles(path p) {
   string file_name;
   size_t found;
   vector<string> v;

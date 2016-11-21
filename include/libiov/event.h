@@ -35,12 +35,6 @@ class Event {
  private:
   FileDescPtr prog_;
 
- public:
-  enum ModuleType {
-    NET_FORWARD,
-    NET_POLICY,
-  };
-
   // Name of the event
   std::string event_name;
 
@@ -52,7 +46,7 @@ class Event {
 
   // handler for ingress or egress
   int direction;
-
+public:
   Event();
   ~Event();
 
