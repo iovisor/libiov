@@ -38,7 +38,10 @@ using namespace boost::filesystem;
 namespace iov {
 
 Event::Event() {}
-Event::Event(std::string name, boost::filesystem::path fd) {event_name = name; fd_path = fd.string();}
+Event::Event(std::string name, boost::filesystem::path fd) {
+  event_name = name;
+  fd_path = fd.string();
+}
 Event::~Event() {}
 
 bool Event::Load(IOModule *module, size_t index, ModuleType type) {
@@ -62,7 +65,8 @@ bool Event::Load(IOModule *module, size_t index, ModuleType type) {
 
   ret = fs.Save(fd_path, *prog_);
   if (ret < 0) {
-    std::cout << "Failed to pin: " << bpf_mod->function_name(index) << std::endl;
+    std::cout << "Failed to pin: " << bpf_mod->function_name(index)
+              << std::endl;
     return false;
   }
   return true;

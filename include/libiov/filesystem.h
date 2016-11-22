@@ -80,8 +80,8 @@ class FileSystem {
   int Delete(std::string pathname, bool recursive);
   void GenerateUuid(std::string &uuid_str);
   int CreateDir(std::string path);
-  bool MakePathName(boost::filesystem::path &p, std::string uuid, obj_type_t obj_type,
-      std::string name, bool global);
+  bool MakePathName(boost::filesystem::path &p, std::string uuid,
+      obj_type_t obj_type, std::string name, bool global);
   bool Replace(
       std::string &str, const std::string &from, const std::string &to);
   std::vector<std::string> GetFiles(boost::filesystem::path p);

@@ -38,20 +38,26 @@ using namespace boost::filesystem;
 namespace iov {
 
 Table::Table() {}
-Table::Table(boost::filesystem::path ptable, boost::filesystem::path pmeta, const string name, bool scope, size_t s_key, size_t s_leaf) {
-       path_table_fd = ptable; path_meta_fd = pmeta; table_name = name; global = scope; key_size = s_key; leaf_size = s_leaf;}
+Table::Table(boost::filesystem::path ptable, boost::filesystem::path pmeta,
+    const string name, bool scope, size_t s_key, size_t s_leaf) {
+  path_table_fd = ptable;
+  path_meta_fd = pmeta;
+  table_name = name;
+  global = scope;
+  key_size = s_key;
+  leaf_size = s_leaf;
+}
 Table::~Table() {}
 
-
 bool Table::Load(IOModule *module, size_t index) {
-
   FileSystem fs;
   path p;
   int ret;
   ebpf::BPFModule *bpf_mod = module->GetBpfModule();
 
-  tableprog_.reset(new FileDesc(Insert((bpf_map_type)(bpf_mod->table_type(index)), key_size, leaf_size, bpf_mod->table_max_entries(index))));
-
+  tableprog_.reset(
+      new FileDesc(Insert((bpf_map_type)(bpf_mod->table_type(index)), key_size,
+          leaf_size, bpf_mod->table_max_entries(index))));
   if (*tableprog_ < 0)
     return false;
 
@@ -66,7 +72,8 @@ bool Table::Load(IOModule *module, size_t index) {
   struct descr item;
   item.key_size = key_size;
   item.leaf_size = leaf_size;
-  metaprog_.reset(new FileDesc(Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1)));
+  metaprog_.reset(new FileDesc(
+      Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1)));
 
   if (*metaprog_ < 0)
     return false;
@@ -80,7 +87,6 @@ bool Table::Load(IOModule *module, size_t index) {
 
   return true;
 }
-
 
 // Insert creates a Map of type bpf_map_type, with key size key_size, a value
 // size of leaf_size and the maximum amount of entries of max_entries.

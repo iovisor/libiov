@@ -223,8 +223,8 @@ int FileSystem::CreateDir(string dirpath) {
   return ret;
 }
 
-bool FileSystem::MakePathName(path &p, string uuid, obj_type_t obj_type,
-    string name, bool global) {
+bool FileSystem::MakePathName(
+    path &p, string uuid, obj_type_t obj_type, string name, bool global) {
   string pathname;
 
   switch (obj_type) {
@@ -245,7 +245,6 @@ bool FileSystem::MakePathName(path &p, string uuid, obj_type_t obj_type,
     return false;
   }
 
-  
   p = pathname.c_str();
 
   if (create_directories(p)) {

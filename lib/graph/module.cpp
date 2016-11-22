@@ -37,7 +37,7 @@ using namespace std;
 namespace iov {
 
 IOModule::IOModule() {}
-IOModule::IOModule(string module_name) {name=module_name;}
+IOModule::IOModule(string module_name) { name = module_name; }
 IOModule::~IOModule() {}
 
 bool IOModule::Init(string &&text, ModuleType type, bool scope) {
@@ -49,7 +49,6 @@ bool IOModule::Init(string &&text, ModuleType type, bool scope) {
         return true;
       },
       std::move(text));
-  
   bool ret = res.get();
   if (!ret)
     return false;
@@ -58,7 +57,6 @@ bool IOModule::Init(string &&text, ModuleType type, bool scope) {
 }
 
 bool IOModule::Load(ModuleType type, bool scope) {
-
   bool ret = true;
   FileSystem fs;
   path pevent;
@@ -71,16 +69,16 @@ bool IOModule::Load(ModuleType type, bool scope) {
   fs.GenerateUuid(uuid);
 
   for (size_t i = 0; i < num_functions; i++) {
-    if (!fs.MakePathName(pevent, uuid, EVENT,
-            mod_->function_name(i), scope)) {
+    if (!fs.MakePathName(pevent, uuid, EVENT, mod_->function_name(i), scope)) {
       std::cout << "Create dir for event failed" << std::endl;
       return false;
     }
 
-     pevent+= mod_->function_name(i);
+    pevent += mod_->function_name(i);
 
     // In this construnctor we can pass some arg
-    std::unique_ptr<Event> ev = make_unique<Event>(mod_->function_name(i), pevent);
+    std::unique_ptr<Event> ev =
+        make_unique<Event>(mod_->function_name(i), pevent);
     Event *ev_tmp = ev.get();
     event[mod_->function_name(i)] = std::move(ev);
 
@@ -91,8 +89,7 @@ bool IOModule::Load(ModuleType type, bool scope) {
 
   for (size_t i = 0; i < num_tables; i++) {
     // In this construnctor we can pass some arg
-    if (!fs.MakePathName(ptable, uuid, TABLE,
-            mod_->table_name(i), scope)) {
+    if (!fs.MakePathName(ptable, uuid, TABLE, mod_->table_name(i), scope)) {
       std::cout << "Create dir for table failed" << std::endl;
       return false;
     }
@@ -101,7 +98,9 @@ bool IOModule::Load(ModuleType type, bool scope) {
     pmeta = ptable;
     pmeta += "_metadata";
 
-    std::unique_ptr<Table> tb = make_unique<Table>(ptable, pmeta, mod_->table_name(i), scope, mod_->table_key_size(i), mod_->table_leaf_size(i));
+    std::unique_ptr<Table> tb =
+        make_unique<Table>(ptable, pmeta, mod_->table_name(i), scope,
+            mod_->table_key_size(i), mod_->table_leaf_size(i));
     Table *tb_tmp = tb.get();
     table[mod_->table_name(i)] = std::move(tb);
 

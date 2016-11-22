@@ -17,8 +17,8 @@
 #pragma once
 
 #include <uuid/uuid.h>
-#include <boost/filesystem.hpp>
 #include <uuid/uuid.h>
+#include <boost/filesystem.hpp>
 #include <future>
 #include <string>
 

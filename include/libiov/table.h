@@ -66,7 +66,8 @@ class Table {
   uint8_t visibility;
 
   Table();
-  Table(boost::filesystem::path ptable, boost::filesystem::path pmeta, const std::string name, bool scope, size_t key_size, size_t leaf_size);
+  Table(boost::filesystem::path ptable, boost::filesystem::path pmeta,
+      const std::string name, bool scope, size_t key_size, size_t leaf_size);
   ~Table();
 
   bool Load(IOModule *module, size_t index);

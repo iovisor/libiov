@@ -34,7 +34,6 @@ using namespace iov;
 using namespace boost::filesystem;
 
 TEST_CASE("test show table", "[module_table_show]") {
-
   std::string f_table, m_data;
   FileSystem fs;
   std::ifstream tableFile, metaFile;
@@ -59,5 +58,4 @@ TEST_CASE("test show table", "[module_table_show]") {
   table.fd_table = table_fd;
 
   REQUIRE((ret = table.ShowTableElements()) == 0);
-
 }

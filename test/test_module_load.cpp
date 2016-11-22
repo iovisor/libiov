@@ -65,10 +65,14 @@ TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
 
   uuidFile << mod->uuid;
 
-  for (std::map<const std::string, std::unique_ptr<Event>>::iterator it=mod->event.begin(); it!=mod->event.end(); ++it)
+  for (std::map<const std::string, std::unique_ptr<Event>>::iterator it =
+           mod->event.begin();
+       it != mod->event.end(); ++it)
     moduleFile << it->second->fd_path.string() << std::endl;
 
-  for (std::map<const std::string, std::unique_ptr<Table>>::iterator it=mod->table.begin(); it!=mod->table.end(); ++it) {
+  for (std::map<const std::string, std::unique_ptr<Table>>::iterator it =
+           mod->table.begin();
+       it != mod->table.end(); ++it) {
     tableFile << it->second->path_table_fd.string() << std::endl;
     metaFile << it->second->path_meta_fd.string() << std::endl;
   }
