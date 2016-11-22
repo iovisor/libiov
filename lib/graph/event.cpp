@@ -38,7 +38,7 @@ using namespace boost::filesystem;
 namespace iov {
 
 Event::Event() {}
-Event(const sdt::string name, boost::filesystem::path fd) {event_name = name; fp_path = fd;}
+Event::Event(std::string name, boost::filesystem::path fd) {event_name = name; fd_path = fd.string();}
 Event::~Event() {}
 
 bool Event::Load(IOModule *module, size_t index, ModuleType type) {

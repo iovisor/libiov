@@ -17,7 +17,6 @@
 #include <libiov.h>
 #include "libiov/event.h"
 #include "libiov/filesystem.h"
-#include "libiov/metadata.h"
 #include "libiov/module.h"
 #include "libiov/table.h"
 
@@ -30,6 +29,5 @@ TEST_CASE("test basic library sanity", "[basic]") {
     iov::Table table;
     iov::Event event;
     iov::FileSystem files;
-    iov::MetaData meta;
   }
 }

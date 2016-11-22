@@ -21,7 +21,6 @@
 #include <linux/bpf.h>
 #include "libiov/command.h"
 #include "libiov/filesystem.h"
-#include "libiov/metadata.h"
 #include "libiov/module.h"
 #include "libiov/table.h"
 
@@ -41,7 +40,6 @@ TEST_CASE("test table loading and saving", "[module_table_pin]") {
   FileSystem fs;
   Table table;
   IOModule module;
-  MetaData meta;
   ebpf::BPFModule *bpf_mod;
   path p;
 

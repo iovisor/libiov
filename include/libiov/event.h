@@ -32,23 +32,19 @@ namespace iov {
 class IOModule;
 
 class Event {
- private:
+ public:
   FileDescPtr prog_;
 
   // Name of the event
   std::string event_name;
-
-  // File descriptor of the event to store
-  int event_fd;
 
   // cls_bpf, xdp etc...
   int event_type;
 
   // handler for ingress or egress
   int direction;
-public:
   Event();
-  Event(const std::string name, boost::filesystem::path fd);
+  Event(std::string name, boost::filesystem::path fd);
   ~Event();
 
   boost::filesystem::path fd_path;
