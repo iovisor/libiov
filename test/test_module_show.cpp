@@ -53,4 +53,6 @@ TEST_CASE("test show module attributes", "[module_show]") {
 
   tables = module.ShowStates(module_name);
   events = module.ShowEvents(module_name);
+
+  fs.Delete("modules", true);
 }

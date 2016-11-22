@@ -45,13 +45,9 @@ FileSystem::~FileSystem() {}
  * file_name is the file where the fd will be save
  */
 
-int FileSystem::Save(path p, string file_name, int fd) {
+int FileSystem::Save(path p, int fd) {
   int ret = 0;
-  const char *file = NULL;
-  string pathname = p.string();
-  pathname.append(file_name);
-  file = pathname.c_str();
-  ret = bpf_obj_pin(fd, file);
+  ret = bpf_obj_pin(fd, p.string().c_str());
   return ret;
 }
 
@@ -256,7 +252,6 @@ bool FileSystem::MakePathName(path &p, string uuid, obj_type_t obj_type,
     cout << "mkdir " << pathname << " failed: " << strerror(errno) << endl;
     return false;
   }
-
   if (!name.empty()) {
     pathname.append(name).append("/");
     p = pathname.c_str();

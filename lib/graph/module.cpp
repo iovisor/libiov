@@ -155,7 +155,7 @@ vector<Event> IOModule::ShowEvents(string module_name) {
 
   uuid_str = NameToUuid(module_name);
   ret = fs.MakePathName(p, uuid_str, EVENT, "", false);
-  if (ret) {
+  if (!ret) {
     cout << "ERROR DETECTED in making pathname" << endl;
     return events;
   }
@@ -179,7 +179,7 @@ string IOModule::NameToUuid(string module_name) {
   } else {
     uuid_str = pos->second;
   }
-  return uuid;
+  return uuid_str;
 }
 
 void IOModule::InsertTable(Table table) { tables.push_back(&table); }

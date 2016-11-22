@@ -34,76 +34,30 @@ using namespace iov;
 using namespace boost::filesystem;
 
 TEST_CASE("test show table", "[module_table_show]") {
-  char *uuid_str = NULL;
-  int fd, ret;
-  uint32_t key;
+
+  std::string f_table, m_data;
   FileSystem fs;
+  std::ifstream tableFile, metaFile;
+  int table_fd = 0;
+  int meta_fd = 0;
+  int ret = 0;
+  uint32_t key;
   Table table;
-  IOModule module;
-  ebpf::BPFModule *bpf_mod;
-  path p;
-  bool scope = false;
+  struct descr item;
 
-  string text =
-      "struct packet { u64 rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", "
-      "uint32_t, struct packet, interfaces, 20);";
+  tableFile.open("/var/tmp/table.txt");
+  metaFile.open("/var/tmp/meta.txt");
+  getline(tableFile, f_table);
+  getline(metaFile, m_data);
+  tableFile.close();
+  metaFile.close();
 
-  struct packet_ {
-    uint64_t rx_pkt;
-    uint64_t tx_pkt;
-  } packet;
+  REQUIRE((table_fd = fs.Open(f_table.c_str())) > 0);
+  REQUIRE((meta_fd = fs.Open(m_data.c_str())) > 0);
 
-  module.Init(std::move(text), NET_FORWARD, scope);
+  table.fd_meta = meta_fd;
+  table.fd_table = table_fd;
 
-  //bpf_mod = module.GetBpfModule();
+  REQUIRE((ret = table.ShowTableElements()) == 0);
 
-  // DAVIDE TO DO
-  //fd = table.Insert(BPF_MAP_TYPE_HASH, bpf_mod->table_key_size(0),
-    //  bpf_mod->table_leaf_size(0), 20);
-
-  //table.table_fd = fd;
-
-  //uuid_str = new char[100];
-  // DAVIDE COMM for now
-  //fs.GenerateUuid(uuid_str);
-
-  //REQUIRE(fs.MakePathName(
-    //          p, uuid_str, TABLE, bpf_mod->table_name(0), false) == 0);
-
-  //REQUIRE(fs.Save(p, bpf_mod->table_name(0), fd) == 0);
-
-  //string table_key = bpf_mod->table_key_desc(0);
-  //string table_leaf = bpf_mod->table_leaf_desc(0);
-
-  //meta.Update(bpf_mod);
-
-  //fd = table.Insert(
-    //  BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1);
-  //table.table_meta_fd = fd;
-
-  //string file_name = bpf_mod->table_name(0);
-  //file_name.append("_metadata");
-  //REQUIRE(fs.Save(p, file_name.c_str(), fd) == 0);
-
-  //key = 0;
-  //REQUIRE(table.Update(fd, &key, &meta.item, BPF_ANY) == 0);
-
-  //key = 0;
-  //packet.rx_pkt = 20;
-  //packet.tx_pkt = 21;
-  //REQUIRE(table.Update(table.table_fd, &key, &packet, BPF_ANY) == 0);
-
-  //key = 1;
-  //packet.rx_pkt = 26;
-  //packet.tx_pkt = 27;
-  //REQUIRE(table.Update(table.table_fd, &key, &packet, BPF_ANY) == 0);
-  //key = 2;
-  //packet.rx_pkt = 45;
-  //packet.tx_pkt = 58;
-  //REQUIRE(table.Update(table.table_fd, &key, &packet, BPF_ANY) == 0);
-
-  //REQUIRE((ret = table.ShowTableElements()) == 0);
-
-  //fs.Delete("modules", true);
-  //delete[] uuid_str;
 }

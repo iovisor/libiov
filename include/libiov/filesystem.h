@@ -74,7 +74,7 @@ class FileSystem {
  public:
   FileSystem();
   ~FileSystem();
-  int Save(boost::filesystem::path p, std::string file_name, int fd);
+  int Save(boost::filesystem::path p, int fd);
   int Open(std::string pathname);
   void Show(std::string pathname, std::vector<std::string> &files);
   int Delete(std::string pathname, bool recursive);

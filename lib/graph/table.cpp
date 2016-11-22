@@ -57,7 +57,7 @@ bool Table::Load(IOModule *module, size_t index) {
 
   fd_table = *tableprog_;
 
-  ret = fs.Save(path_table_fd, table_name, *tableprog_);
+  ret = fs.Save(path_table_fd, *tableprog_);
   if (ret < 0) {
     std::cout << "Failed to pin: " << bpf_mod->table_name(index) << std::endl;
     return false;
@@ -73,9 +73,7 @@ bool Table::Load(IOModule *module, size_t index) {
 
   fd_meta = *metaprog_;
 
-  string file = path_meta_fd.filename().string();
-  std::cout << "TEST FOR GETTING THE FILE: " << file << std::endl;
-  ret = fs.Save(path_meta_fd, file, *metaprog_);
+  ret = fs.Save(path_meta_fd, *metaprog_);
 
   uint32_t key = 0;
   Update(*metaprog_, &key, &item, BPF_ANY);

@@ -60,13 +60,7 @@ bool Event::Load(IOModule *module, size_t index, ModuleType type) {
   default: {}
   }
 
-  //if (!fs.MakePathName(p, module->uuid, EVENT,
-  //          bpf_mod->function_name(index), true)) {
-  //  std::cout << "Create dir failed" << std::endl;
-  //  return false;
-  //}
-
-  ret = fs.Save(fd_path, bpf_mod->function_name(index), *prog_);
+  ret = fs.Save(fd_path, *prog_);
   if (ret < 0) {
     std::cout << "Failed to pin: " << bpf_mod->function_name(index) << std::endl;
     return false;

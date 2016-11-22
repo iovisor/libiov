@@ -20,7 +20,6 @@
 #include <vector>
 #include "libiov/command.h"
 #include "libiov/filesystem.h"
-#include "libiov/metadata.h"
 #include "libiov/module.h"
 #include "libiov/table.h"
 
@@ -38,15 +37,10 @@ TEST_CASE("test lookup local table element", "[module_table_lookup]") {
   std::ifstream tableFile, metaFile;
   int table_fd = 0;
   int meta_fd = 0;
-  int key_fd = 0;
-  int leaf_fd = 0;
   int ret = 0;
   uint32_t key;
-  uint32_t value;
   Table table;
-  MetaData meta;
-  std::string key_desc_path;
-  std::string leaf_desc_path;
+  struct descr item;
 
   tableFile.open("/var/tmp/table.txt");
   metaFile.open("/var/tmp/meta.txt");
@@ -59,22 +53,22 @@ TEST_CASE("test lookup local table element", "[module_table_lookup]") {
   REQUIRE((meta_fd = fs.Open(m_data.c_str())) > 0);
 
   key = 0;
-  REQUIRE((ret = table.Lookup(meta_fd, &key, &meta.item)) == 0);
+  REQUIRE((ret = table.Lookup(meta_fd, &key, &item)) == 0);
 
-  std::string key_test(meta.item.key_size, '\0');
-  std::string next_key_test(meta.item.key_size, '\0');
-  std::string packet(meta.item.leaf_size, '\0');
+  std::string key_size(item.key_size, 'f');
+  std::string next_key_size(item.key_size, '\0');
+  std::string packet(item.leaf_size, '\0');
   struct packet_ {
     uint64_t rx_pkt;
     uint64_t tx_pkt;
   } test;
 
-  REQUIRE((ret = table.GetKey(table_fd, (void *)key_test.c_str(),
-               (void *)next_key_test.c_str())) == 0);
-  REQUIRE((ret = table.Lookup(table_fd, (void *)next_key_test.c_str(),
+  REQUIRE((ret = table.GetKey(table_fd, (void *)key_size.c_str(),
+               (void *)next_key_size.c_str())) == 0);
+  REQUIRE((ret = table.Lookup(table_fd, (void *)next_key_size.c_str(),
                (void *)packet.c_str())) == 0);
 
-  memcpy(&test, packet.data(), meta.item.leaf_size);
+  memcpy(&test, packet.data(), item.leaf_size);
   REQUIRE(test.rx_pkt == 25);
   REQUIRE(test.tx_pkt == 30);
 }

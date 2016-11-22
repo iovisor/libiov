@@ -41,11 +41,6 @@ TEST_CASE("test update local table element", "[module_update_get]") {
   int ret;
   struct descr item;
 
-  struct host_ {
-    uint64_t mac;
-    int ifindex;
-    int pad;
-  } host;
   struct packet_ {
     uint64_t rx_pkt;
     uint64_t tx_pkt;
@@ -56,12 +51,11 @@ TEST_CASE("test update local table element", "[module_update_get]") {
   getline(tableFile, f_table);
   tableFile.close();
 
+  std::cout << "F_table fd in UPdata: " << f_table.c_str() << std::endl;
   REQUIRE((fd_table = fs.Open(f_table.c_str())) > 0);
 
-  host.mac = 123;
-  host.ifindex = 456;
-  host.pad = 0;
+  key = 0;
   packet.rx_pkt = 25;
   packet.tx_pkt = 30;
-  REQUIRE(table.Update(fd_table, &host, &packet, BPF_ANY) == 0);
+  REQUIRE(table.Update(fd_table, &key, &packet, BPF_ANY) == 0);
 }

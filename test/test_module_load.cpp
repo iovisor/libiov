@@ -43,10 +43,10 @@ TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
   bool scope = false;
   string pathname;
   string text =
-      "struct interfaces{ u32 rx_pkt; u32 tx_pkt; }; struct packet { u64 "
+      "struct packet { u64 "
       "rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", uint32_t, struct packet, "
-      "num_ports, 1); BPF_TABLE(\"hash\", uint32_t, struct interfaces, "
-      "ifindex, 1); int one(void *ctx) { return 0; } int two(void *ctx) { "
+      "num_ports, 1); "
+      "int one(void *ctx) { return 0; } int two(void *ctx) { "
       "return 0; } int three(void *ctx) { return 0; }";
 
   std::ofstream uuidFile, moduleFile, tableFile, metaFile;
