@@ -25,13 +25,28 @@
 #include <bcc/bpf_module.h>
 #include <bcc/libbpf.h>
 
+#include "libiov/module.h"
 #include "libiov/types.h"
 
 namespace iov {
 class IOModule;
 
+struct descr {
+  size_t key_size;
+  size_t leaf_size;
+};
+
 class Table {
  public:
+  boost::filesystem::path path_table_fd;
+  boost::filesystem::path path_meta_fd;
+
+  int fd_table;
+  int fd_meta;
+
+  FileDescPtr tableprog_;
+  FileDescPtr metaprog_;
+
   // Name of the table
   std::string table_name;
 
@@ -44,21 +59,17 @@ class Table {
   // Define if a table is local or global
   bool global;
 
+  size_t key_size;
+  size_t leaf_size;
+
   // Flags for table accessibility. RW, Hidden etc..
   uint8_t visibility;
 
-  // File descriptor of the table to store key/value
-  int table_fd;
-
-  // File desciptor that keeps the metadata for the table,
-  // specifically types for key and value
-  int table_meta_fd;
-
   Table();
+  Table(boost::filesystem::path ptable, boost::filesystem::path pmeta, const std::string name, bool scope, size_t key_size, size_t leaf_size);
   ~Table();
 
-  void UpdateAttributes(ebpf::BPFModule *bpf_mod, size_t index, bool scope,
-      uint8_t flags, int fd, int meta_fd);
+  bool Load(IOModule *module, size_t index);
 
   // Api to set the table scope (local or global)
   void SetTableScope(bool scope);

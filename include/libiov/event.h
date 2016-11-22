@@ -48,8 +48,10 @@ class Event {
   int direction;
 public:
   Event();
+  Event(const std::string name, boost::filesystem::path fd);
   ~Event();
 
+  boost::filesystem::path fd_path;
   // Api to load the event in kernel
   bool Load(IOModule *module, size_t index, ModuleType type);
 

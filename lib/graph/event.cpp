@@ -23,7 +23,6 @@
 #include <vector>
 #include "libiov/filesystem.h"
 #include "libiov/internal/types.h"
-#include "libiov/metadata.h"
 #include "libiov/table.h"
 
 using std::future;
@@ -39,13 +38,14 @@ using namespace boost::filesystem;
 namespace iov {
 
 Event::Event() {}
+Event(const sdt::string name, boost::filesystem::path fd) {event_name = name; fp_path = fd;}
 Event::~Event() {}
 
 bool Event::Load(IOModule *module, size_t index, ModuleType type) {
   FileSystem fs;
   path p;
   int ret = 0;
-  bool success = true;
+  string file_path;
 
   ebpf::BPFModule *bpf_mod = module->GetBpfModule();
   switch (type) {
@@ -60,15 +60,13 @@ bool Event::Load(IOModule *module, size_t index, ModuleType type) {
   default: {}
   }
 
-  ret = fs.MakePathName(p, module->uuid, EVENT,
-            bpf_mod->function_name(index), true);
+  //if (!fs.MakePathName(p, module->uuid, EVENT,
+  //          bpf_mod->function_name(index), true)) {
+  //  std::cout << "Create dir failed" << std::endl;
+  //  return false;
+  //}
 
-  if (!success) {
-    std::cout << "Create dir failed" << std::endl;
-    return success;
-  }
-
-  ret = fs.Save(p, bpf_mod->function_name(index), *prog_);
+  ret = fs.Save(fd_path, bpf_mod->function_name(index), *prog_);
   if (ret < 0) {
     std::cout << "Failed to pin: " << bpf_mod->function_name(index) << std::endl;
     return false;

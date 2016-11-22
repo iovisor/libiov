@@ -42,7 +42,6 @@ class IOModule {
 
  private:
   std::unique_ptr<ebpf::BPFModule> mod_;
-  std::map<const std::string, std::unique_ptr<Event>> event;
   std::vector<Table *> tables;
   std::vector<Event *> events;
 
@@ -51,12 +50,14 @@ class IOModule {
   IOModule(std::string module_name);
   ~IOModule();
 
+  std::map<const std::string, std::unique_ptr<Event>> event;
+  std::map<const std::string, std::unique_ptr<Table>> table;
   std::string uuid;
   size_t num_functions;
   size_t num_tables;
 
-  bool Load(ModuleType type);
-  bool Init(std::string &&text, ModuleType type);
+  bool Load(ModuleType type, bool scope);
+  bool Init(std::string &&text, ModuleType type, bool scope);
   ebpf::BPFModule *GetBpfModule() const;
 
   // Random number that uniquily identify a module. Look at filestem.h

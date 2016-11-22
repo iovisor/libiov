@@ -24,7 +24,6 @@
 #include "libiov/event.h"
 #include "libiov/filesystem.h"
 #include "libiov/internal/types.h"
-#include "libiov/metadata.h"
 #include "libiov/module.h"
 
 using std::future;
@@ -34,11 +33,56 @@ using std::vector;
 using std::unique_ptr;
 
 using namespace iov::internal;
+using namespace boost::filesystem;
 
 namespace iov {
 
 Table::Table() {}
+Table::Table(boost::filesystem::path ptable, boost::filesystem::path pmeta, const string name, bool scope, size_t s_key, size_t s_leaf) {
+       path_table_fd = ptable; path_meta_fd = pmeta; table_name = name; global = scope; key_size = s_key; leaf_size = s_leaf;}
 Table::~Table() {}
+
+
+bool Table::Load(IOModule *module, size_t index) {
+
+  FileSystem fs;
+  path p;
+  int ret;
+  ebpf::BPFModule *bpf_mod = module->GetBpfModule();
+
+  tableprog_.reset(new FileDesc(Insert((bpf_map_type)(bpf_mod->table_type(index)), key_size, leaf_size, bpf_mod->table_max_entries(index))));
+
+  if (*tableprog_ < 0)
+    return false;
+
+  fd_table = *tableprog_;
+
+  ret = fs.Save(path_table_fd, table_name, *tableprog_);
+  if (ret < 0) {
+    std::cout << "Failed to pin: " << bpf_mod->table_name(index) << std::endl;
+    return false;
+  }
+
+  struct descr item;
+  item.key_size = key_size;
+  item.leaf_size = leaf_size;
+  metaprog_.reset(new FileDesc(Insert(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(struct descr), 1)));
+
+  if (*metaprog_ < 0)
+    return false;
+
+  fd_meta = *metaprog_;
+
+  string file = path_meta_fd.filename().string();
+  std::cout << "TEST FOR GETTING THE FILE: " << file << std::endl;
+  ret = fs.Save(path_meta_fd, file, *metaprog_);
+
+  uint32_t key = 0;
+  Update(*metaprog_, &key, &item, BPF_ANY);
+
+  return true;
+}
+
 
 // Insert creates a Map of type bpf_map_type, with key size key_size, a value
 // size of leaf_size and the maximum amount of entries of max_entries.
@@ -80,26 +124,26 @@ int Table::GetKey(int fd, void *key, void *next_key) {
   return ret;
 }
 
-int Table::GetTableElements(std::map<std::string, std::string> &item) {
+int Table::GetTableElements(std::map<std::string, std::string> &element) {
   // Open Metadata
   // Open Key desc optional for now
   // Open Leaf desc optional for now
   // lookup all the keys and return them along with values
   int ret = 0;
-  MetaData meta;
-  int key_meta;
+  uint32_t key_meta;
+  struct descr item;
 
   key_meta = 0;
-  ret = Lookup(table_meta_fd, &key_meta, &meta.item);
+  ret = Lookup(fd_meta, &key_meta, &item);
   if (ret != 0) {
     return ret;
   }
 
-  std::string key(meta.item.key_size, 'f');
-  std::string next_key(meta.item.key_size, '\0');
-  std::string leaf(meta.item.leaf_size, '\0');
+  std::string key(item.key_size, 'f');
+  std::string next_key(item.key_size, '\0');
+  std::string leaf(item.leaf_size, '\0');
   for (;;) {
-    ret = GetKey(table_fd, (void *)key.c_str(), (void *)next_key.c_str());
+    ret = GetKey(fd_table, (void *)key.c_str(), (void *)next_key.c_str());
 
     if (ret != 0) {
       // Should return a value for this that is not 0
@@ -109,11 +153,11 @@ int Table::GetTableElements(std::map<std::string, std::string> &item) {
       break;
     }
 
-    ret = Lookup(table_fd, (void *)next_key.c_str(), (void *)leaf.c_str());
+    ret = Lookup(fd_table, (void *)next_key.c_str(), (void *)leaf.c_str());
     if (ret != 0) {
       return ret;
     }
-    item[next_key] = leaf;
+    element[next_key] = leaf;
     // We can fill the data
     key = next_key;
   }
@@ -157,12 +201,4 @@ void Table::SetTableScope(bool scope) { global = scope; }
 
 bool Table::GetTableScope() { return global; }
 
-void Table::UpdateAttributes(ebpf::BPFModule *bpf_mod, size_t index, bool scope,
-    uint8_t flags, int fd, int meta_fd) {
-  table_name = bpf_mod->table_name(index);
-  global = scope;
-  visibility = flags;
-  table_fd = fd;
-  table_meta_fd = meta_fd;
-}
 }  // End of namespace iov

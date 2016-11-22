@@ -4,4 +4,4 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${LIBBCC_INCLUDE_DIRS})
 
-add_library(iovgraph command.cpp graph.cpp module.cpp filesystem.cpp table.cpp metadata.cpp event.cpp)
+add_library(iovgraph command.cpp graph.cpp module.cpp filesystem.cpp table.cpp event.cpp)

@@ -66,10 +66,8 @@ TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
 
   uuidFile << mod->uuid;
 
-  //pathname.append(bpf_mod->function_name(i));
-
-  //moduleFile << EVENT_PATHNAME for each function
-  //moduleFile << pathname.c_str() << std::endl;
+  for (std::map<const std::string, std::unique_ptr<Event>>::iterator it=mod->event.begin(); it!=mod->event.end(); ++it)
+    moduleFile << it->second->fd_path.string() << std::endl;
 
   // To test LATER
   //table = new Table[num_tables];
@@ -115,6 +113,10 @@ TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
     //table[i].UpdateAttributes(bpf_mod, i, false, 0, fd, meta_fd);
   //}
 
+  for (std::map<const std::string, std::unique_ptr<Table>>::iterator it=mod->table.begin(); it!=mod->table.end(); ++it) {
+    tableFile << it->second->table_fd.string() << std::endl;
+    metaFile << it->second->meta_fd.string() << std::endl;
+  }
   //delete[] table;
   //delete[] meta;
   moduleFile.close();

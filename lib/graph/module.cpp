@@ -40,7 +40,7 @@ IOModule::IOModule() {}
 IOModule::IOModule(string module_name) {name=module_name;}
 IOModule::~IOModule() {}
 
-bool IOModule::Init(string &&text, ModuleType type) {
+bool IOModule::Init(string &&text, ModuleType type, bool scope) {
   future<bool> res = std::async(std::launch::async,
       [this](string &&text) -> bool {
         mod_ = make_unique<ebpf::BPFModule>(0);
@@ -54,15 +54,16 @@ bool IOModule::Init(string &&text, ModuleType type) {
   if (!ret)
     return false;
 
-  return Load(type);
+  return Load(type, scope);
 }
 
-bool IOModule::Load(ModuleType type) {
+bool IOModule::Load(ModuleType type, bool scope) {
 
   bool ret = true;
-  //Event *event;
-  //Table *table;
   FileSystem fs;
+  path pevent;
+  path pmeta;
+  path ptable;
 
   num_functions = mod_->num_functions();
   num_tables = mod_->num_tables();
@@ -70,8 +71,16 @@ bool IOModule::Load(ModuleType type) {
   fs.GenerateUuid(uuid);
 
   for (size_t i = 0; i < num_functions; i++) {
+    if (!fs.MakePathName(pevent, uuid, EVENT,
+            mod_->function_name(i), scope)) {
+      std::cout << "Create dir for event failed" << std::endl;
+      return false;
+    }
+
+     pevent+= mod_->function_name(i);
+
     // In this construnctor we can pass some arg
-    std::unique_ptr<Event> ev = make_unique<Event>();
+    std::unique_ptr<Event> ev = make_unique<Event>(mod_->function_name(i), pevent);
     Event *ev_tmp = ev.get();
     event[mod_->function_name(i)] = std::move(ev);
 
@@ -79,6 +88,28 @@ bool IOModule::Load(ModuleType type) {
     if (!ret)
       cout << "Error in loading event: " << mod_->function_name(i) << endl;
   }
+
+  for (size_t i = 0; i < num_tables; i++) {
+    // In this construnctor we can pass some arg
+    if (!fs.MakePathName(ptable, uuid, TABLE,
+            mod_->table_name(i), scope)) {
+      std::cout << "Create dir for table failed" << std::endl;
+      return false;
+    }
+
+    ptable += mod_->table_name(i);
+    pmeta = ptable;
+    pmeta += "_metadata";
+
+    std::unique_ptr<Table> tb = make_unique<Table>(ptable, pmeta, mod_->table_name(i), scope, mod_->table_key_size(i), mod_->table_leaf_size(i));
+    Table *tb_tmp = tb.get();
+    table[mod_->table_name(i)] = std::move(tb);
+
+    ret = tb_tmp->Load(this, i);
+    if (!ret)
+      cout << "Error in loading table: " << mod_->table_name(i) << endl;
+  }
+
   return ret;
 }
 
