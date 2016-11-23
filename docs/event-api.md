@@ -62,3 +62,5 @@ A Generator creates events and sends them over a bus.
 An Event instance carries information about a given system event. The specific details of the Event class depend on the event type.
 
 * Event() - create an event
+* Event(Event original) - copy an event
+* status drop() - prevent an event from being delivered further to other IOmodules
