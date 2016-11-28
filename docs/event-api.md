@@ -104,27 +104,29 @@ m.init();
 #### Filter
 A Filter allows an IOmodule to capture a subset of the events traveling on a Bus.
 
-* Filter(string filter) - create a Filter to receive a specific set of events from a Bus; the format of the filter string is specific to the implementation and event
-* bool filter(Event e) - callback invoked when a new Event has been received; it should return _true_ when the Event matches the Filter
+* Filter() - create an empty Filter, that matches nothing; needed if the user wants to extend this class to enable extra functionality;
+* Filter(string filter) - create a Filter to receive a specific set of events from a Bus; the format of the filter string is specific to the implementation and event;
+* bool filter(const Event e) - callback invoked when a new Event has been received; it should return _true_ when the Event matches the Filter.
 
 Example:
 ````C++
-class MyFilter : public Filter {
-  MyFilter(string s) : Filter(s), f_(s) { }
+/* example of a fictitious filter string to match NetworkPacket events representing IPv4 packets */
+Filter f1("event.ethertype == 0x0800");
+
+/* a more complicated way to achieve the same result: filter a generic ethertype provided dynamically */
+class EtherTypeFilter : public Filter {
+  EtherTypeFilter(uint16_t type) : Filter(), type_(type) { }
   
-  bool filter(Event e) {
-    bool match;
-    /* Use string f_ to determine whether Event e matches the filter, or defer to
-     * Filter::filter(e), that uses a base implementation, if no specialization needed.
-     */
-    
-    return match;
+  bool filter(const Event e) {
+    const NetworkPacket n = (NetworkPacket) e;
+
+    return (n.ethertype == type_);
   }
   
-  string f_;
+  uint16_t type_;
 };
 
-MyFilter f("filter string");
+EtherTypeFilter f2(0x0800);
 ````
 
 
