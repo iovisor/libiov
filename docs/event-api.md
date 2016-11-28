@@ -13,6 +13,7 @@
 
 #### Messages
 * Event
+  * Event::Type
 
 ### Classes details
 
@@ -229,6 +230,7 @@ An Event instance carries information about a given system event. The specific d
 * Event() - create an event
 * Event(Event original) - copy an event
 * Status drop() - prevent an event from being delivered further to other IOmodules
+* Event::Type get_type() - return the Type associated with the current Event
 
 Example:
 ````C++
@@ -249,4 +251,27 @@ class MyGen : public Generator {
   
   Bus::SendHandle h_;
 }
+````
+
+##### Event::Type
+A Event::Type defines the type of a specific class of events. For example, there is one Event::Type for events related to network packets.
+Values for Event::Type can be created dynamically, to generate new types of events at runtime. A searchable registry of all the values of Event::Type is maintained globally.
+
+An event format description can be optionally attached to an Event::Type. This is used to describe the expected content of events of a given Type. The system does not perform format checks: the description is merely a hint to help the user decode an arbitrary event.
+
+* static Type get_type_by_name(string name) - create a new Type with the given name, if it does not exist already; otherwise, return the already existing instance;
+* static Type get_type_by_name(string name, string format_description) - as the method above, but attach a format description if the type is new; the description is in an implementation-specific format (e.g. YAML, JSON, etc...).
+* string get_description() - return the format description, if any, associated with the current Type
+
+Example:
+````C++
+Type t1 = Type::get_type_by_name("some type");
+Type net_type = Type::get_type_by_name("NetworkPacket");
+/* Example of type format description in JSON format. */
+Type phone_book_type = Type::get_type_by_name("Phone Book entry",
+                                              "{
+                                                 'first_name' : 'string',
+                                                 'last_name' : 'string',
+                                                 'phone_number' : 'string',
+                                               }");
 ````
