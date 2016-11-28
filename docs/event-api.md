@@ -131,24 +131,62 @@ MyFilter f("filter string");
 #### Action
 An Action is used to perform some actions when a given Filter is triggered.
 
-* Action() - create an Action
-* Status process(Event e) - callback invoked when a new Event has been received
+* Action() - create an empty Action, that performs no operation; needed if the user needs to extend this class to enable extra functionality;
+* Action(functor f) - create an Action that executes the provided code; the functor code uses a set of primitives provided by the system to process events;
+* Action(string code) - create an Action that executes the provided code; the string is "compiled" to use the internal implementation provided by the system to process events;
+* Status process(Event e) - callback invoked when a new Event has been received; if not overridden, the base implementation provides a system-dependent set of base actions. The implementation might put some restrictions on the complexity of the overriding code, or might execute it in a sandboxed/slower environment.
 
 Example:
 ````C++
+/* Example of a basic action to handle network packets (i.e. fictitious NetworkPacket events).
+ *
+ * The action decreases the TTL in the IPv4 header of the packet, and sends it to another bus "Bus2"
+ * if it is still nonzero; the packet event is dropped otherwise.
+ *
+ * The same action is performed with slightly different types of syntax.
+ */
+
+Action a1("event.ipv4.ttl--;
+  if (event.ipv4.ttl == 0)
+    return ACTION_DROP(e);
+  return ACTION_BUS_SEND(e, \"Bus2\");
+");
+
+Action a2([](Event e) {
+  NetworkPacket n = (NetworkPacket) e;
+  n.ipv4.ttl--;
+  if (n.ipv4.ttl == 0) {
+    e.drop();
+    return;
+  }
+  Bus b = Bus::get_bus_by_name("Bus2");
+  auto s = b.join(this);
+  s[1].send(e);
+  return;
+});
+
 class MyAction : public Action {
-  MyAction() : Action() { }
+  MyAction(SendHandle h) : Action(), handle_(h) { }
   
   Status process(Event e) {
-    /* Add code here to perform the requested action.
-     * The implementation might define a base implementation for Action::process()
-     * that can perform some basic operations, so this method would not be needed.
-     */
+    NetworkPacket n = (NetworkPacket) e;
+    n.ipv4.ttl--;
+    if (n.ipv4.ttl == 0) {
+      e.drop();
+      return OK;
+    }
+    handle_.send(e);
     return OK;
   }
+
+  SendHandle handle_;
 };
 
-MyAction a;
+Bus b = Bus::get_bus_by_name("Bus2");
+auto join_status = b.join(some_module);
+if (join_status[0] != OK)
+  return ERROR;
+MyAction a3(join_status[2]);
 ````
 
 #### Generator
