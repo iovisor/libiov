@@ -23,8 +23,8 @@ In the API below, "Status" is an appropriate type to return a status code and an
 A Bus defines a mediator to exchange Events of a given type among Generators and IOmodules.
 
 * Bus(string name, Event::Type type) - create a new Bus by name, handling events of a specific type;
-* {Status, SendHandle, RecvHandle} join(IOmodule m) - attach an IOmodule to a Bus; since an IOmodule can also both send and receive events to/from a Bus, two handles are returned;
-* {Status, SendHandle} join(Generator g) - attach an Event Generator to a Bus; an Event Generator can only send events to a Bus;
+* {Status, Bus::SendHandle, Bus::RecvHandle} join(IOmodule m) - attach an IOmodule to a Bus; since an IOmodule can also both send and receive events to/from a Bus, two handles are returned;
+* {Status, Bus::SendHandle} join(Generator g) - attach an Event Generator to a Bus; an Event Generator can only send events to a Bus;
 * static Bus get_bus_by_name(string name) - return a Bus given its name, or an error otherwise.
 
 Example:
@@ -170,7 +170,7 @@ Action a2([](Event e) {
 });
 
 class MyAction : public Action {
-  MyAction(SendHandle h) : Action(), handle_(h) { }
+  MyAction(Bus::SendHandle h) : Action(), handle_(h) { }
   
   Status process(Event e) {
     NetworkPacket n = (NetworkPacket) e;
@@ -183,7 +183,7 @@ class MyAction : public Action {
     return OK;
   }
 
-  SendHandle handle_;
+  Bus::SendHandle handle_;
 };
 
 Bus b = Bus::get_bus_by_name("Bus2");
@@ -227,8 +227,8 @@ g.init();
 #### Event
 An Event instance carries information about a given system event. The specific details of the Event class depend on the event type.
 
-* Event(Type t) - create an event of a given type;
-* Event(string type_name) - create an event of a given type; shorthand to get a named, descriptionless Event::Type on the fly;
+* Event(Event::Type t) - create an event of a given type;
+* Event(string type_name) - create an event of a given type; shorthand to get a named, descriptionless Type on the fly;
 * Event(Event original) - copy an event;
 * Status drop() - prevent an event from being delivered further to other IOmodules;
 * Event::Type get_type() - return the Type associated with the current Event.
@@ -247,22 +247,22 @@ class HardwareEvent : public Event {
   HardwareEvent() : Event(HardwareEvent::get_event_type()) {}
 
   // generate and cache an event type for the current event class
-  static Type get_event_type() {
+  static Event::Type get_event_type() {
     if (type_)
       return type_;
 
     // create a new type and attach a description to it
-    type_ = Type::get_type_by_name("HardwareEvent",
-                                   "{
-                                      'field1_' : 'integer',
-                                      'field2_' : 'string',
-                                    }");
+    type_ = Event::Type::get_type_by_name("HardwareEvent",
+                                          "{
+                                             'field1_' : 'integer',
+                                             'field2_' : 'string',
+                                           }");
     return type_;
   }
 
   int field1_;
   string field2_;
-  static Type type_;
+  static Event::Type type_;
 };
 
 /* An example of Generator for events of type HardwareEvent. This generator works
@@ -297,7 +297,7 @@ class HWGen : public Generator {
     }
   }
   
-  SendHandle h_;
+  Bus::SendHandle h_;
 };
 ````
 
@@ -305,21 +305,21 @@ class HWGen : public Generator {
 A Event::Type defines the type of a specific class of events. For example, there is one Event::Type for events related to network packets.
 Values for Event::Type can be created dynamically, to generate new types of events at runtime. A searchable registry of all the values of Event::Type is maintained globally.
 
-An event format description can be optionally attached to an Event::Type. This is used to describe the expected content of events of a given Type. The system does not perform format checks: the description is merely a hint to help the user decode an arbitrary event.
+An event format description can be optionally attached to an Event::Type. This is used to describe the expected content of events of a given Event::Type. The system does not perform format checks: the description is merely a hint to help the user decode an arbitrary event.
 
-* static Type get_type_by_name(string name) - create a new Type with the given name, if it does not exist already; otherwise, return the already existing instance;
-* static Type get_type_by_name(string name, string format_description) - as the method above, but attach a format description if the type is new; the description is in an implementation-specific format (e.g. YAML, JSON, etc...);
+* static Event::Type get_type_by_name(string name) - create a new Type with the given name, if it does not exist already; otherwise, return the already existing instance;
+* static Event::Type get_type_by_name(string name, string format_description) - as the method above, but attach a format description if the type is new; the description is in an implementation-specific format (e.g. YAML, JSON, etc...);
 * string get_description() - return the format description, if any, associated with the current Type.
 
 Example:
 ````C++
-Type t1 = Type::get_type_by_name("some type");
-Type net_type = Type::get_type_by_name("NetworkPacket");
+Event::Type t1 = Event::Type::get_type_by_name("some type");
+Event::Type net_type = Event::Type::get_type_by_name("NetworkPacket");
 /* Example of type format description in JSON format. */
-Type phone_book_type = Type::get_type_by_name("Phone Book entry",
-                                              "{
-                                                 'first_name' : 'string',
-                                                 'last_name' : 'string',
-                                                 'phone_number' : 'string',
-                                               }");
+Event::Type phone_book_type = Event::Type::get_type_by_name("Phone Book entry",
+                                                            "{
+                                                              'first_name' : 'string',
+                                                              'last_name' : 'string',
+                                                              'phone_number' : 'string',
+                                                             }");
 ````
