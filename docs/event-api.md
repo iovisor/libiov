@@ -22,10 +22,10 @@ In the API below, "Status" is an appropriate type to return a status code and an
 #### Bus
 A Bus defines a mediator to exchange Events of a given type among Generators and IOmodules.
 
-* Bus(string name, Event::Type type) - create a new Bus by name, handling events of a specific type
-* {Status, SendHandle, RecvHandle} join(IOmodule m) - attach an IOmodule to a Bus; since an IOmodule can also both send and receive events to/from a Bus, two handles are returned
-* {Status, SendHandle} join(Generator g) - attach an Event Generator to a Bus; an Event Generator can only send events to a Bus
-* static Bus get_bus_by_name(string name) - return a Bus given its name, or an error otherwise
+* Bus(string name, Event::Type type) - create a new Bus by name, handling events of a specific type;
+* {Status, SendHandle, RecvHandle} join(IOmodule m) - attach an IOmodule to a Bus; since an IOmodule can also both send and receive events to/from a Bus, two handles are returned;
+* {Status, SendHandle} join(Generator g) - attach an Event Generator to a Bus; an Event Generator can only send events to a Bus;
+* static Bus get_bus_by_name(string name) - return a Bus given its name, or an error otherwise.
 
 Example:
 ````C++
@@ -38,8 +38,8 @@ if (join_status[0] != OK)
 
 
 ##### Bus::SendHandle
-* Status send(Event e) - send an Event to the bus - the request can fail for a number of reasons (e.g., if the sender has not joined the Bus, or if the Event is of the wrong type)
-* Status leave() - disconnect the sender from the Bus
+* Status send(Event e) - send an Event to the bus - the request can fail for a number of reasons (e.g., if the sender has not joined the Bus, or if the Event is of the wrong type);
+* Status leave() - disconnect the sender from the Bus.
 
 Example:
 ````C++
@@ -54,8 +54,8 @@ if (s != OK)
 
 
 ##### Bus::RecvHandle
-* Status subscribe(Filter f, Action a) - subscribe a Filter and Action to this Bus; when an Event that matches the Filter is sent on the Bus, the provided Action is called
-* Status leave() - disconnect the receiver from the Bus
+* Status subscribe(Filter f, Action a) - subscribe a Filter and Action to this Bus; when an Event that matches the Filter is sent on the Bus, the provided Action is called;
+* Status leave() - disconnect the receiver from the Bus.
 
 Example:
 ````C++
@@ -72,7 +72,7 @@ if (s != OK)
 #### IOmodule
 An IOmodule attaches to a Bus to receive and possibly send Events.
 
-* IOmodule() - create a new IOmodule
+* IOmodule() - create a new IOmodule.
 
 Example:
 ````C++
@@ -195,7 +195,7 @@ MyAction a3(join_status[2]);
 #### Generator
 A Generator creates events and sends them over a bus.
 
-* Generator() - create an event generator
+* Generator() - create an event generator.
 
 Example:
 ````C++
@@ -227,30 +227,63 @@ g.init();
 #### Event
 An Event instance carries information about a given system event. The specific details of the Event class depend on the event type.
 
-* Event() - create an event
-* Event(Event original) - copy an event
-* Status drop() - prevent an event from being delivered further to other IOmodules
-* Event::Type get_type() - return the Type associated with the current Event
+* Event(Type t) - create an event of a given type;
+* Event(string type_name) - create an event of a given type; shorthand to get a named, descriptionless Event::Type on the fly;
+* Event(Event original) - copy an event;
+* Status drop() - prevent an event from being delivered further to other IOmodules;
+* Event::Type get_type() - return the Type associated with the current Event.
 
 Example:
 ````C++
+/* Two alternative, but equivalent ways to create a custom event type */
+class HardwareEvent : public Event {
+  HardwareEvent() : Event("HardwareEvent") {}
+
+  int field1_;
+  string field2_;
+};
+
+class HardwareEvent : public Event {
+  HardwareEvent() : Event(HardwareEvent::get_event_type()) {}
+
+  // generate and cache an event type for the current event class
+  static Type get_event_type() {
+    if (type_)
+      return type_;
+
+    // create a new type and attach a description to it
+    type_ = Type::get_type_by_name("HardwareEvent",
+                                   "{
+                                      'field1_' : 'integer',
+                                      'field2_' : 'string',
+                                    }");
+    return type_;
+  }
+
+  int field1_;
+  string field2_;
+  static Type type_;
+};
+
 class MyGen : public Generator {
   MyGen() : Generator() { ... }
 
   /* Example of a worker method that generates Event instances based on hardware events */
   void worker() {
     while (true) {
-      /* wait for a hardware event to happen */
+      /* wait for some hardware event to happen */
       
-      MyHardwardEvent e;
-      /* set the properties of the event */
+      HardwareEvent e;
+      /* set event properties depending on the actual event context */
+      e.field1_ = 42;
+      e.field2_ = "custom string";
       
       h_.send(e);
     }
   }
   
   Bus::SendHandle h_;
-}
+};
 ````
 
 ##### Event::Type
@@ -260,8 +293,8 @@ Values for Event::Type can be created dynamically, to generate new types of even
 An event format description can be optionally attached to an Event::Type. This is used to describe the expected content of events of a given Type. The system does not perform format checks: the description is merely a hint to help the user decode an arbitrary event.
 
 * static Type get_type_by_name(string name) - create a new Type with the given name, if it does not exist already; otherwise, return the already existing instance;
-* static Type get_type_by_name(string name, string format_description) - as the method above, but attach a format description if the type is new; the description is in an implementation-specific format (e.g. YAML, JSON, etc...).
-* string get_description() - return the format description, if any, associated with the current Type
+* static Type get_type_by_name(string name, string format_description) - as the method above, but attach a format description if the type is new; the description is in an implementation-specific format (e.g. YAML, JSON, etc...);
+* string get_description() - return the format description, if any, associated with the current Type.
 
 Example:
 ````C++
