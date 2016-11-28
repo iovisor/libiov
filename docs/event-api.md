@@ -143,8 +143,9 @@ Example:
 ````C++
 /* Example of a basic action to handle network packets (i.e. fictitious NetworkPacket events).
  *
- * The action decreases the TTL in the IPv4 header of the packet, and sends it to another bus "Bus2"
- * if it is still nonzero; the packet event is dropped otherwise.
+ * The action decreases the TTL in the IPv4 header of the packet.
+ * Afterwards, if the TTL is nonzero, the event is sent to a bus named "Bus2";
+ * the packet event is dropped otherwise.
  *
  * The same action is performed with slightly different types of syntax.
  */
@@ -212,7 +213,6 @@ class MyGen : public Generator {
     /* Setup a thread or notification mechanism to generate events.
      * Use h_ to send events.
      */
-
     return OK;
   }
   
@@ -268,7 +268,7 @@ class HardwareEvent : public Event {
 class MyGen : public Generator {
   MyGen() : Generator() { ... }
 
-  /* Example of a worker method that generates Event instances based on hardware events */
+  /* Example of a worker method that generates HardwareEvent instances based on hardware events */
   void worker() {
     while (true) {
       /* wait for some hardware event to happen */
