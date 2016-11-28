@@ -265,8 +265,23 @@ class HardwareEvent : public Event {
   static Type type_;
 };
 
-class MyGen : public Generator {
-  MyGen() : Generator() { ... }
+/* An example of Generator for events of type HardwareEvent. This generator works
+ * regardless of how HardwareEvent has been defined above.
+ */
+class HWGen : public Generator {
+  HWGen() : Generator() { }
+
+  Status init() {
+    /* connect to a bus handling events of type HardwareEvent, obtain its SendHandle, and store it in h_ */
+    Bus b = Bus::get_bus_by_name("a bus of HW events");
+    auto join_status = b.join(this);
+    if (join_status[0] != OK)
+      return ERROR;
+
+    h_ = join_status[1];
+    /* setup the worker somehow */
+    return OK;
+  }
 
   /* Example of a worker method that generates HardwareEvent instances based on hardware events */
   void worker() {
@@ -282,7 +297,7 @@ class MyGen : public Generator {
     }
   }
   
-  Bus::SendHandle h_;
+  SendHandle h_;
 };
 ````
 
