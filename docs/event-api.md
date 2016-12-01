@@ -2,7 +2,7 @@
 
 ### Classes overview
 
-#### Entities
+#### Actors
 * Bus
   * Bus::SendHandle
   * Bus::RecvHandle
@@ -10,6 +10,7 @@
 * Filter
 * Action
 * Generator
+* Filesystem
 
 #### Messages
 * Event
@@ -20,12 +21,12 @@
 In the API below, "Status" is an appropriate type to return a status code and ancillary context (e.g. error string).
 
 #### Bus
-A Bus defines a mediator to exchange Events of a given type among Generators and IOmodules.
+A Bus defines a mediator to exchange Events of a given type among Generators and IOmodules. Some calls require a Filesystem handle to store/load data into/from the filesystem.
 
-* Bus(string name, Event::Type type) - create a new Bus by name, handling events of a specific type;
+* Bus(Filesystem fs, string name, Event::Type type) - create a new Bus by name, handling events of a specific type;
 * {Status, Bus::SendHandle, Bus::RecvHandle} join(IOmodule m) - attach an IOmodule to a Bus; since an IOmodule can also both send and receive events to/from a Bus, two handles are returned;
 * {Status, Bus::SendHandle} join(Generator g) - attach an Event Generator to a Bus; an Event Generator can only send events to a Bus;
-* static Bus get_bus_by_name(string name) - return a Bus given its name, or an error otherwise.
+* static Bus get_bus_by_name(Filesystem fs, string name) - return a Bus given its name, or an error otherwise.
 
 Example:
 ````C++
@@ -224,6 +225,14 @@ g.init();
 ````
 
 
+#### Filesystem
+A Filesystem instance provides access to save/load data to/from the file system.
+
+The implementation is not fully defined yet.
+
+*TO BE DEFINED LATER*
+
+
 #### Event
 An Event instance carries information about a given system event. The specific details of the Event class depend on the event type.
 
@@ -307,8 +316,10 @@ Values for Event::Type can be created dynamically, to generate new types of even
 
 An event format description can be optionally attached to an Event::Type. This is used to describe the expected content of events of a given Event::Type. The system does not perform format checks: the description is merely a hint to help the user decode an arbitrary event.
 
-* static Event::Type get_type_by_name(string name) - create a new Type with the given name, if it does not exist already; otherwise, return the already existing instance;
-* static Event::Type get_type_by_name(string name, string format_description) - as the method above, but attach a format description if the type is new; the description is in an implementation-specific format (e.g. YAML, JSON, etc...);
+Some calls require a Filesystem handle to store/load data into/from the filesystem.
+
+* static Event::Type get_type_by_name(Filesystem fs, string name) - create a new Type with the given name, if it does not exist already; otherwise, return the already existing instance;
+* static Event::Type get_type_by_name(Filesystem fs, string name, string format_description) - as the method above, but attach a format description if the type is new; the description is in an implementation-specific format (e.g. YAML, JSON, etc...);
 * string get_description() - return the format description, if any, associated with the current Type.
 
 Example:
