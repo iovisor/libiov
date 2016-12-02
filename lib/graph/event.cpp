@@ -38,17 +38,15 @@ using namespace boost::filesystem;
 namespace iov {
 
 Event::Event() {}
-Event::Event(std::string name, boost::filesystem::path fd) {
-  event_name = name;
-  fd_path = fd.string();
-}
+Event::Event(std::string name) { event_name = name; }
 Event::~Event() {}
 
-bool Event::Load(IOModule *module, size_t index, ModuleType type) {
-  FileSystem fs;
+bool Event::InitEvent(
+    IOModule *module, size_t index, ModuleType type, bool scope) {
   path p;
   int ret = 0;
   string file_path;
+  FileSystem *fs = module->GetFileSystemHandler();
 
   ebpf::BPFModule *bpf_mod = module->GetBpfModule();
   switch (type) {
@@ -63,10 +61,17 @@ bool Event::Load(IOModule *module, size_t index, ModuleType type) {
   default: {}
   }
 
-  ret = fs.Save(fd_path, *prog_);
+  if (!fs->MakePathName(p, module->uuid, EVENT, event_name, scope)) {
+    std::cout << "Create dir for event failed" << std::endl;
+    return false;
+  }
+
+  p += event_name;
+  fd_path = p.string();
+
+  ret = fs->Save(fd_path, *prog_);
   if (ret < 0) {
-    std::cout << "Failed to pin: " << bpf_mod->function_name(index)
-              << std::endl;
+    std::cout << "Failed to pin: " << event_name << std::endl;
     return false;
   }
   return true;

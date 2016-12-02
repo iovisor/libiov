@@ -35,7 +35,12 @@ using namespace boost::filesystem;
 
 namespace iov {
 
-FileSystem::FileSystem() { root_path = LibiovRootPath; }
+FileSystem::FileSystem() { root_path = RootPath; }
+FileSystem::FileSystem(string prefix) { root_path = RootPath + prefix; }
+FileSystem::FileSystem(string t_data, string m_data) {
+  m_file = m_data;
+  t_file = t_data;
+}
 FileSystem::~FileSystem() {}
 
 /* Save
@@ -57,10 +62,19 @@ int FileSystem::Save(path p, int fd) {
  * for more info.
  */
 
-int FileSystem::Open(string pathname) {
+int FileSystem::Open(obj_type_t obj_type) {
   int ret = 0;
   const char *file = NULL;
-  file = pathname.c_str();
+  switch (obj_type) {
+  case TABLE:
+    file = t_file.c_str();
+    break;
+  case META:
+    file = m_file.c_str();
+    break;
+  default:
+    std::cout << "Not a valid file" << std::endl;
+  }
   ret = bpf_obj_get(file);
   return ret;
 }
@@ -194,15 +208,6 @@ int FileSystem::Delete(string pathname, bool recursive) {
   return 0;
 }
 
-void FileSystem::GenerateUuid(string &uuid) {
-  uuid_t id1;
-  char *uuid_str = new char[UUID_LEN];
-  uuid_generate((unsigned char *)&id1);
-  uuid_unparse(id1, uuid_str);
-  uuid = uuid_str;
-  delete[] uuid_str;
-}
-
 bool FileSystem::Replace(string &str, const string &from, const string &to) {
   size_t start_pos = str.find(from);
   if (start_pos == string::npos)
@@ -225,20 +230,20 @@ int FileSystem::CreateDir(string dirpath) {
 
 bool FileSystem::MakePathName(
     path &p, string uuid, obj_type_t obj_type, string name, bool global) {
-  string pathname;
+  string pathname = root_path;
 
   switch (obj_type) {
   case EVENT: {
-    pathname = ModulePath;
-    pathname.append(uuid).append(ModuleEventPath);
+    pathname.append(ModulePath)
+        .append(uuid)
+        .append("/")
+        .append(ModuleEventPath);
   } break;
   case TABLE: {
     if (global) {
-      pathname = GlobalTablePath;
-      pathname.append(uuid);
+      pathname.append(GlobalTablePath).append(uuid).append("/");
     } else {
-      pathname = ModulePath;
-      pathname.append(uuid).append(StatePath);
+      pathname.append(ModulePath).append(uuid).append("/").append(StatePath);
     }
   } break;
   default:

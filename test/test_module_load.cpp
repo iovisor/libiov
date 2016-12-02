@@ -36,7 +36,8 @@ using namespace iov;
 
 TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
   int fd, meta_fd;
-  FileSystem fs;
+  // DAVIDE comment out
+  // FileSystem fs("libiov/");
   Event *event_list;
   Table *table;
   ebpf::BPFModule *bpf_mod;
@@ -57,7 +58,7 @@ TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
   uuidFile.open("/var/tmp/uuid.txt");
 
   auto mod = unique_ptr<IOModule>(new IOModule());
-  REQUIRE(mod->Init(std::move(text), NET_FORWARD, scope) == true);
+  REQUIRE(mod->Init("libiov/", std::move(text), NET_FORWARD, scope) == true);
 
   bpf_mod = mod->GetBpfModule();
   size_t num_funcs = bpf_mod->num_functions();
@@ -73,8 +74,9 @@ TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
   for (std::map<const std::string, std::unique_ptr<Table>>::iterator it =
            mod->table.begin();
        it != mod->table.end(); ++it) {
-    tableFile << it->second->path_table_fd.string() << std::endl;
-    metaFile << it->second->path_meta_fd.string() << std::endl;
+    // DAVIDE path_fd end meta should be retrieve bh functions
+    // tableFile << it->second->path_table_fd.string() << std::endl;
+    // metaFile << it->second->path_meta_fd.string() << std::endl;
   }
   moduleFile.close();
   tableFile.close();

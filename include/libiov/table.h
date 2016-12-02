@@ -37,40 +37,32 @@ struct descr {
 };
 
 class Table {
- public:
+ private:
   boost::filesystem::path path_table_fd;
   boost::filesystem::path path_meta_fd;
-
   int fd_table;
   int fd_meta;
-
   FileDescPtr tableprog_;
   FileDescPtr metaprog_;
-
   // Name of the table
   std::string table_name;
-
-  // Key/Value pair
-  std::map<std::string, std::string> data;
-
   // Maximun number of propeties for a table
   int max_size;
-
   // Define if a table is local or global
   bool global;
-
   size_t key_size;
   size_t leaf_size;
-
+  // Key/Value pair
+  std::map<std::string, std::string> data;
   // Flags for table accessibility. RW, Hidden etc..
   uint8_t visibility;
 
+ public:
   Table();
-  Table(boost::filesystem::path ptable, boost::filesystem::path pmeta,
-      const std::string name, bool scope, size_t key_size, size_t leaf_size);
+  Table(const std::string name, bool scope, size_t key_size, size_t leaf_size);
   ~Table();
 
-  bool Load(IOModule *module, size_t index);
+  bool InitTable(IOModule *module, size_t index);
 
   // Api to set the table scope (local or global)
   void SetTableScope(bool scope);
@@ -82,7 +74,7 @@ class Table {
   int GetTableElements(std::map<std::string, std::string> &item);
 
   // Api to display key/value pair
-  int ShowTableElements();
+  int ShowTableElements(FileSystem fs);
 
   void DumpItem(std::string item);
 
@@ -90,7 +82,7 @@ class Table {
       bpf_map_type map_type, int key_size, int leaf_size, int max_entries);
 
   // Api to Update an element of the table
-  int Update(int fd, void *key, void *value, uint64_t flags);
+  int Update(FileSystem *fs, void *key, void *value, uint64_t flags);
 
   // Api to Delete an element of the table
   int Delete(int fd, void *key);

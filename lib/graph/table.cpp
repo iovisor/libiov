@@ -38,10 +38,7 @@ using namespace boost::filesystem;
 namespace iov {
 
 Table::Table() {}
-Table::Table(boost::filesystem::path ptable, boost::filesystem::path pmeta,
-    const string name, bool scope, size_t s_key, size_t s_leaf) {
-  path_table_fd = ptable;
-  path_meta_fd = pmeta;
+Table::Table(const string name, bool scope, size_t s_key, size_t s_leaf) {
   table_name = name;
   global = scope;
   key_size = s_key;
@@ -49,11 +46,11 @@ Table::Table(boost::filesystem::path ptable, boost::filesystem::path pmeta,
 }
 Table::~Table() {}
 
-bool Table::Load(IOModule *module, size_t index) {
-  FileSystem fs;
+bool Table::InitTable(IOModule *module, size_t index) {
   path p;
   int ret;
   ebpf::BPFModule *bpf_mod = module->GetBpfModule();
+  FileSystem *fs = module->GetFileSystemHandler();
 
   tableprog_.reset(
       new FileDesc(Insert((bpf_map_type)(bpf_mod->table_type(index)), key_size,
@@ -63,7 +60,18 @@ bool Table::Load(IOModule *module, size_t index) {
 
   fd_table = *tableprog_;
 
-  ret = fs.Save(path_table_fd, *tableprog_);
+  if (!fs->MakePathName(p, module->uuid, TABLE, table_name, global)) {
+    std::cout << "Create dir for table failed" << std::endl;
+    return false;
+  }
+
+  std::cout << "PATH: " << p.string() << std::endl;
+  p += table_name;
+  path_table_fd = p;
+  p += "_metadata";
+  path_meta_fd = p;
+
+  ret = fs->Save(path_table_fd, *tableprog_);
   if (ret < 0) {
     std::cout << "Failed to pin: " << bpf_mod->table_name(index) << std::endl;
     return false;
@@ -80,10 +88,10 @@ bool Table::Load(IOModule *module, size_t index) {
 
   fd_meta = *metaprog_;
 
-  ret = fs.Save(path_meta_fd, *metaprog_);
+  ret = fs->Save(path_meta_fd, *metaprog_);
 
   uint32_t key = 0;
-  Update(*metaprog_, &key, &item, BPF_ANY);
+  Update(fs, &key, &item, BPF_ANY);
 
   return true;
 }
@@ -99,8 +107,9 @@ int Table::Insert(
 }
 
 // Update updates the map in fd with the given value in the given key.
-int Table::Update(int fd, void *key, void *value, uint64_t flags) {
+int Table::Update(FileSystem *fs, void *key, void *value, uint64_t flags) {
   int ret;
+  int fd = fs->Open(TABLE);
   ret = bpf_update_elem(fd, key, value, flags);
 
   return ret;
@@ -180,7 +189,10 @@ void Table::DumpItem(std::string item) {
   std::cout << std::endl;
 }
 
-int Table::ShowTableElements() {
+int Table::ShowTableElements(FileSystem fs) {
+  fd_meta = fs.Open(TABLE);
+  fd_table = fs.Open(META);
+
   std::map<std::string, std::string> items;
   int ret = 0;
   ret = GetTableElements(items);

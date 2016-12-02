@@ -23,6 +23,7 @@
 #include <string>
 
 #include "libiov/event.h"
+#include "libiov/filesystem.h"
 #include "libiov/table.h"
 #include "libiov/types.h"
 
@@ -42,6 +43,7 @@ class IOModule {
 
  private:
   std::unique_ptr<ebpf::BPFModule> mod_;
+  std::unique_ptr<FileSystem> fs_;
   std::vector<Table *> tables;
   std::vector<Event *> events;
 
@@ -56,9 +58,12 @@ class IOModule {
   size_t num_functions;
   size_t num_tables;
 
-  bool Load(ModuleType type, bool scope);
-  bool Init(std::string &&text, ModuleType type, bool scope);
+  void GenerateUuid(std::string &uuid_str);
+  bool Load(std::string fs_prefix, ModuleType type, bool scope);
+  bool Init(
+      std::string fs_prefix, std::string &&text, ModuleType type, bool scope);
   ebpf::BPFModule *GetBpfModule() const;
+  FileSystem *GetFileSystemHandler() const;
 
   // Random number that uniquily identify a module. Look at filestem.h
   // for filesystem layout

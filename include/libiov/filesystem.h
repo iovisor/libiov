@@ -32,12 +32,14 @@
 
 #include "libiov/types.h"
 
+#define RootPath "/sys/fs/bpf/"
 #define LibiovRootPath "/sys/fs/bpf/libiov/"
-#define GlobalTablePath "/sys/fs/bpf/libiov/tables/"
-#define ModulePath "/sys/fs/bpf/libiov/modules/"
+#define GlobalTablePath "tables/"
+#define ModulePath "modules/"
 
-#define ModuleEventPath "/events/"
-#define StatePath "/state/"
+#define LibiovPath "libiov/"
+#define ModuleEventPath "events/"
+#define StatePath "state/"
 #define MetadataPath "metadata/"
 #define KeyDesc "_key_desc"
 #define LeafDesc "_leaf_desc"
@@ -47,7 +49,7 @@ namespace iov {
 
 class IOModule;
 
-enum obj_type_t { EVENT = 1, TABLE };
+enum obj_type_t { EVENT = 1, TABLE, META };
 
 class FileSystem {
   // Root of the filesystem is /sys/fs/bpf/libiov.
@@ -64,21 +66,25 @@ class FileSystem {
   // State is a list of tables local to the IOModule
   // Libiov has the metadata for each table under state/
 
+ private:
   void ProcessEntry(std::string directory, std::vector<std::string> &files);
   void ProcessEntity(struct dirent *entity, std::vector<std::string> &files);
   void ProcessFile(std::string file, std::vector<std::string> &files);
   bool dirExists(std::string dir_path);
   int DeleteFilesInDirectory(std::string dirpath, bool recursive);
   std::string root_path;
+  std::string m_file;
+  std::string t_file;
 
  public:
   FileSystem();
+  FileSystem(std::string prefix);
+  FileSystem(std::string t_data, std::string m_data);
   ~FileSystem();
   int Save(boost::filesystem::path p, int fd);
-  int Open(std::string pathname);
+  int Open(obj_type_t obj_type);
   void Show(std::string pathname, std::vector<std::string> &files);
   int Delete(std::string pathname, bool recursive);
-  void GenerateUuid(std::string &uuid_str);
   int CreateDir(std::string path);
   bool MakePathName(boost::filesystem::path &p, std::string uuid,
       obj_type_t obj_type, std::string name, bool global);

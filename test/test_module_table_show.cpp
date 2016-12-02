@@ -34,28 +34,19 @@ using namespace iov;
 using namespace boost::filesystem;
 
 TEST_CASE("test show table", "[module_table_show]") {
-  std::string f_table, m_data;
-  FileSystem fs;
+  std::string t_data, m_data;
   std::ifstream tableFile, metaFile;
-  int table_fd = 0;
-  int meta_fd = 0;
   int ret = 0;
-  uint32_t key;
   Table table;
-  struct descr item;
 
   tableFile.open("/var/tmp/table.txt");
   metaFile.open("/var/tmp/meta.txt");
-  getline(tableFile, f_table);
+  getline(tableFile, t_data);
   getline(metaFile, m_data);
   tableFile.close();
   metaFile.close();
 
-  REQUIRE((table_fd = fs.Open(f_table.c_str())) > 0);
-  REQUIRE((meta_fd = fs.Open(m_data.c_str())) > 0);
+  FileSystem fs(t_data, m_data);
 
-  table.fd_meta = meta_fd;
-  table.fd_table = table_fd;
-
-  REQUIRE((ret = table.ShowTableElements()) == 0);
+  REQUIRE((ret = table.ShowTableElements(fs)) == 0);
 }

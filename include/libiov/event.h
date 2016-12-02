@@ -21,6 +21,7 @@
 #include <iostream>
 #include <string>
 
+#include "libiov/filesystem.h"
 #include "libiov/module.h"
 #include "libiov/types.h"
 
@@ -30,26 +31,23 @@ class BPFModule;
 
 namespace iov {
 class IOModule;
+class FileSystem;
 
 class Event {
- public:
+ private:
   FileDescPtr prog_;
-
-  // Name of the event
   std::string event_name;
-
-  // cls_bpf, xdp etc...
   int event_type;
-
-  // handler for ingress or egress
   int direction;
+
+ public:
   Event();
-  Event(std::string name, boost::filesystem::path fd);
+  Event(std::string name);
   ~Event();
 
+  bool InitEvent(IOModule *module, size_t index, ModuleType type, bool scope);
   boost::filesystem::path fd_path;
   // Api to load the event in kernel
-  bool Load(IOModule *module, size_t index, ModuleType type);
 
   // Api to return the file descriptor
   int GetFileDescriptor();

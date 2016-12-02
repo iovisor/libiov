@@ -32,10 +32,9 @@ using std::unique_ptr;
 using namespace iov;
 
 TEST_CASE("test update local table element", "[module_update_get]") {
-  std::string f_table;
-  FileSystem fs;
+  std::string t_file, m_file;
   Table table;
-  std::ifstream tableFile;
+  std::ifstream tableFile, metaFile;
   int fd_table = 0;
   uint32_t key;
   int ret;
@@ -47,15 +46,17 @@ TEST_CASE("test update local table element", "[module_update_get]") {
   } packet;
 
   tableFile.open("/var/tmp/table.txt");
-
-  getline(tableFile, f_table);
+  metaFile.open("/vat/tmp/meta.txt");
+  getline(tableFile, t_file);
+  getline(metaFile, m_file);
   tableFile.close();
+  metaFile.close();
 
-  std::cout << "F_table fd in UPdata: " << f_table.c_str() << std::endl;
-  REQUIRE((fd_table = fs.Open(f_table.c_str())) > 0);
+  FileSystem fs(t_file, m_file);
 
   key = 0;
   packet.rx_pkt = 25;
   packet.tx_pkt = 30;
-  REQUIRE(table.Update(fd_table, &key, &packet, BPF_ANY) == 0);
+  // DAVIDE for now pass the address
+  REQUIRE(table.Update(&fs, &key, &packet, BPF_ANY) == 0);
 }

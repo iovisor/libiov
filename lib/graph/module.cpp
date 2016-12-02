@@ -40,7 +40,17 @@ IOModule::IOModule() {}
 IOModule::IOModule(string module_name) { name = module_name; }
 IOModule::~IOModule() {}
 
-bool IOModule::Init(string &&text, ModuleType type, bool scope) {
+void IOModule::GenerateUuid(string &uuid) {
+  uuid_t id1;
+  char *uuid_str = new char[UUID_LEN];
+  uuid_generate((unsigned char *)&id1);
+  uuid_unparse(id1, uuid_str);
+  uuid = uuid_str;
+  delete[] uuid_str;
+}
+
+bool IOModule::Init(
+    string fs_prefix, string &&text, ModuleType type, bool scope) {
   future<bool> res = std::async(std::launch::async,
       [this](string &&text) -> bool {
         mod_ = make_unique<ebpf::BPFModule>(0);
@@ -53,66 +63,52 @@ bool IOModule::Init(string &&text, ModuleType type, bool scope) {
   if (!ret)
     return false;
 
-  return Load(type, scope);
+  return Load(fs_prefix, type, scope);
 }
 
-bool IOModule::Load(ModuleType type, bool scope) {
+bool IOModule::Load(string fs_prefix, ModuleType type, bool scope) {
   bool ret = true;
-  FileSystem fs;
   path pevent;
   path pmeta;
   path ptable;
 
+  // In this construnctor we can pass some arg. We need to
+  // pass the root of the filesystem like libiov/ or something else
+  std::unique_ptr<FileSystem> fs = make_unique<FileSystem>(fs_prefix);
+  // FileSystem *fs_tmp = fs.get();
+  fs_ = std::move(fs);
+
   num_functions = mod_->num_functions();
   num_tables = mod_->num_tables();
 
-  fs.GenerateUuid(uuid);
+  GenerateUuid(uuid);
 
   for (size_t i = 0; i < num_functions; i++) {
-    if (!fs.MakePathName(pevent, uuid, EVENT, mod_->function_name(i), scope)) {
-      std::cout << "Create dir for event failed" << std::endl;
-      return false;
-    }
-
-    pevent += mod_->function_name(i);
-
     // In this construnctor we can pass some arg
-    std::unique_ptr<Event> ev =
-        make_unique<Event>(mod_->function_name(i), pevent);
+    std::unique_ptr<Event> ev = make_unique<Event>(mod_->function_name(i));
     Event *ev_tmp = ev.get();
     event[mod_->function_name(i)] = std::move(ev);
-
-    ret = ev_tmp->Load(this, i, type);
+    ret = ev_tmp->InitEvent(this, i, type, scope);
     if (!ret)
       cout << "Error in loading event: " << mod_->function_name(i) << endl;
   }
 
   for (size_t i = 0; i < num_tables; i++) {
-    // In this construnctor we can pass some arg
-    if (!fs.MakePathName(ptable, uuid, TABLE, mod_->table_name(i), scope)) {
-      std::cout << "Create dir for table failed" << std::endl;
-      return false;
-    }
-
-    ptable += mod_->table_name(i);
-    pmeta = ptable;
-    pmeta += "_metadata";
-
-    std::unique_ptr<Table> tb =
-        make_unique<Table>(ptable, pmeta, mod_->table_name(i), scope,
-            mod_->table_key_size(i), mod_->table_leaf_size(i));
+    std::unique_ptr<Table> tb = make_unique<Table>(mod_->table_name(i), scope,
+        mod_->table_key_size(i), mod_->table_leaf_size(i));
     Table *tb_tmp = tb.get();
     table[mod_->table_name(i)] = std::move(tb);
 
-    ret = tb_tmp->Load(this, i);
+    ret = tb_tmp->InitTable(this, i);
     if (!ret)
       cout << "Error in loading table: " << mod_->table_name(i) << endl;
   }
-
   return ret;
 }
 
 ebpf::BPFModule *IOModule::GetBpfModule() const { return mod_.get(); }
+
+FileSystem *IOModule::GetFileSystemHandler() const { return fs_.get(); }
 
 std::vector<Table> IOModule::ShowStates(string module_name) {
   // Lookup the module in the filesystem

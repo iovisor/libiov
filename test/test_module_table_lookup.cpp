@@ -49,8 +49,9 @@ TEST_CASE("test lookup local table element", "[module_table_lookup]") {
   tableFile.close();
   metaFile.close();
 
-  REQUIRE((table_fd = fs.Open(f_table.c_str())) > 0);
-  REQUIRE((meta_fd = fs.Open(m_data.c_str())) > 0);
+  // DAVIDE We need to Init FS before callling OPen
+  REQUIRE((table_fd = fs.Open(TABLE)) > 0);
+  REQUIRE((meta_fd = fs.Open(META)) > 0);
 
   key = 0;
   REQUIRE((ret = table.Lookup(meta_fd, &key, &item)) == 0);
