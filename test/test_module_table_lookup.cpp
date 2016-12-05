@@ -56,7 +56,7 @@ TEST_CASE("test lookup local table element", "[module_table_lookup]") {
   uuid_test = mod->NameToUuid(module_name);
   REQUIRE(uuid_test == uuid_str);
 
-  tb = mod->table["num_ports"].get();
+  tb = mod->GetTable("num_ports");
 
   key = 0;
   REQUIRE(tb->Lookup(META, &key, &item) == 0);

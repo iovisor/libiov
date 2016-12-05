@@ -65,37 +65,6 @@ int FileSystem::Open(string file) {
   return ret;
 }
 
-/* Open
- * api to retrive the file descriptor of a bpf program, bpf table.
- * pathname will have the location in the filesytem. Check filesytem.h
- * for more info.
- */
-
-int FileSystem::Open(obj_type_t obj_type) {
-  int ret = 0;
-  std::ifstream fd_file;
-  std::string fd;
-
-  switch (obj_type) {
-  case EVENT:
-    fd_file.open(e_file.c_str());
-    break;
-  case TABLE:
-    fd_file.open(t_file.c_str());
-    break;
-  case META:
-    fd_file.open(m_file.c_str());
-    break;
-  default:
-    std::cout << "Not a valid file" << std::endl;
-    return -1;
-  }
-  getline(fd_file, fd);
-  fd_file.close();
-  ret = bpf_obj_get(fd.c_str());
-  return ret;
-}
-
 void FileSystem::ProcessEntry(string directory, vector<string> &files) {
   string dirToOpen = root_path;
 
@@ -245,9 +214,9 @@ int FileSystem::CreateDir(string dirpath) {
 }
 
 bool FileSystem::MakePathName(
-    path &p, string uuid, obj_type_t obj_type, string name, bool global) {
+    path &p, IOModule *module, obj_type_t obj_type, string name, bool global) {
   string pathname = root_path;
-
+  string uuid = module->GetUuid();
   switch (obj_type) {
   case EVENT: {
     pathname.append(ModulePath)

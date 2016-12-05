@@ -46,23 +46,21 @@ class IOModule {
   std::unique_ptr<FileSystem> fs_;
   std::vector<Table *> tables;
   std::vector<Event *> events;
+  std::map<const std::string, std::unique_ptr<Event>> event;
+  std::map<const std::string, std::unique_ptr<Table>> table;
+  std::string uuid;
+  size_t num_functions;
+  size_t num_tables;
+  std::string name;
 
  public:
   IOModule();
   IOModule(std::string module_name);
   ~IOModule();
 
-  std::map<const std::string, std::unique_ptr<Event>> event;
-  std::map<const std::string, std::unique_ptr<Table>> table;
-  std::string uuid;
-  size_t num_functions;
-  size_t num_tables;
   // Random number that uniquily identify a module. Look at filestem.h
   // for filesystem layout
   std::map<std::string, std::string> prog_uuid;
-
-  // Human readable name of the module to translate the uuid
-  std::string name;
 
   void GenerateUuid(std::string &uuid_str);
   bool Load(ModuleType type);
@@ -86,6 +84,12 @@ class IOModule {
 
   // Api to display all events for a module
   std::vector<Event> ShowEvents(std::string module_name);
+  std::string GetUuid();
+  Table *GetTable(std::string name);
+  std::map<const std::string, std::unique_ptr<Event>>::iterator GetFirstEvent();
+  std::map<const std::string, std::unique_ptr<Event>>::iterator GetLastEvent();
+  std::map<const std::string, std::unique_ptr<Table>>::iterator GetFirstTable();
+  std::map<const std::string, std::unique_ptr<Table>>::iterator GetLastTable();
 };
 
 }  // namespace iov

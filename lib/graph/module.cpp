@@ -170,7 +170,7 @@ std::vector<Table> IOModule::ShowStates(string module_name) {
   path p;
 
   uuid_str = NameToUuid(module_name);
-  ret = fs_->MakePathName(p, uuid_str, TABLE, "", false);
+  ret = fs_->MakePathName(p, this, TABLE, "", false);
   if (!ret) {
     cout << "ERROR DETECTED in making pathname" << endl;
     return tables;
@@ -196,7 +196,7 @@ vector<Event> IOModule::ShowEvents(string module_name) {
   path p;
 
   uuid_str = NameToUuid(module_name);
-  ret = fs_->MakePathName(p, uuid_str, EVENT, "", false);
+  ret = fs_->MakePathName(p, this, EVENT, "", false);
   if (!ret) {
     cout << "ERROR DETECTED in making pathname" << endl;
     return events;
@@ -226,5 +226,26 @@ string IOModule::NameToUuid(string module_name) {
 void IOModule::InsertTable(Table table) { tables.push_back(&table); }
 
 void IOModule::InsertEvent(Event event) { events.push_back(&event); }
+
+std::string IOModule::GetUuid() { return uuid; }
+
+Table *IOModule::GetTable(std::string name) { return table[name].get(); }
+
+std::map<const std::string, std::unique_ptr<Event>>::iterator
+IOModule::GetFirstEvent() {
+  return event.begin();
+}
+std::map<const std::string, std::unique_ptr<Event>>::iterator
+IOModule::GetLastEvent() {
+  return event.end();
+}
+std::map<const std::string, std::unique_ptr<Table>>::iterator
+IOModule::GetFirstTable() {
+  return table.begin();
+}
+std::map<const std::string, std::unique_ptr<Table>>::iterator
+IOModule::GetLastTable() {
+  return table.end();
+}
 
 }  // namespace iov

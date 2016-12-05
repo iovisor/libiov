@@ -83,7 +83,7 @@ bool Table::InitTable(IOModule *module, size_t index) {
 
   fd_table = *tableprog_;
 
-  if (!fs->MakePathName(p, module->uuid, TABLE, table_name, global)) {
+  if (!fs->MakePathName(p, module, TABLE, table_name, global)) {
     std::cout << "Create dir for table failed" << std::endl;
     return false;
   }

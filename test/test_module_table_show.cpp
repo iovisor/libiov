@@ -56,7 +56,6 @@ TEST_CASE("test show table", "[module_table_show]") {
   uuid_test = mod->NameToUuid(module_name);
   REQUIRE(uuid_test == uuid_str);
 
-  tb = mod->table["num_ports"].get();
-
+  tb = mod->GetTable("num_ports");
   REQUIRE(tb->ShowTableElements() == 0);
 }

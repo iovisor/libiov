@@ -84,12 +84,11 @@ class FileSystem {
       std::string m_data);
   ~FileSystem();
   int Save(boost::filesystem::path p, int fd);
-  int Open(obj_type_t obj_type);
   int Open(std::string file);
   void Show(std::string pathname, std::vector<std::string> &files);
   int Delete(std::string pathname, bool recursive);
   int CreateDir(std::string path);
-  bool MakePathName(boost::filesystem::path &p, std::string uuid,
+  bool MakePathName(boost::filesystem::path &p, IOModule *module,
       obj_type_t obj_type, std::string name, bool global);
   bool Replace(
       std::string &str, const std::string &from, const std::string &to);

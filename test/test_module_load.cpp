@@ -63,18 +63,19 @@ TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
   size_t num_funcs = bpf_mod->num_functions();
   size_t num_tables = bpf_mod->num_tables();
 
-  uuidFile << mod->uuid;
+  string uuid = mod->GetUuid();
+  uuidFile << uuid;
 
   for (std::map<const std::string, std::unique_ptr<Event>>::iterator it =
-           mod->event.begin();
-       it != mod->event.end(); ++it) {
+           mod->GetFirstEvent();
+       it != mod->GetLastEvent(); ++it) {
     fd_path = it->second->GetFdPath();
     moduleFile << fd_path << std::endl;
   }
 
   for (std::map<const std::string, std::unique_ptr<Table>>::iterator it =
-           mod->table.begin();
-       it != mod->table.end(); ++it) {
+           mod->GetFirstTable();
+       it != mod->GetLastTable(); ++it) {
     fd_path = it->second->GetTableFdPath();
     tableFile << fd_path << std::endl;
     fd_path = it->second->GetMetaFdPath();

@@ -79,7 +79,7 @@ bool Event::InitEvent(
   default: {}
   }
 
-  if (!fs->MakePathName(p, module->uuid, EVENT, event_name, scope)) {
+  if (!fs->MakePathName(p, module, EVENT, event_name, scope)) {
     std::cout << "Create dir for event failed" << std::endl;
     return false;
   }

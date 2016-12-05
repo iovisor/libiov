@@ -61,7 +61,7 @@ TEST_CASE("test update local table element", "[module_update_get]") {
   uuid_test = mod->NameToUuid(module_name);
   REQUIRE(uuid_test == uuid_str);
 
-  tb = mod->table["num_ports"].get();
+  tb = mod->GetTable("num_ports");
 
   key = 0;
   packet.rx_pkt = 25;
