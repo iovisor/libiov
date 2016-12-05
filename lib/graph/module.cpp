@@ -46,7 +46,19 @@ void IOModule::GenerateUuid(string &uuid) {
   uuid_generate((unsigned char *)&id1);
   uuid_unparse(id1, uuid_str);
   uuid = uuid_str;
+  prog_uuid[name] = uuid;
   delete[] uuid_str;
+}
+
+bool IOModule::Init(string fs_prefix, ModuleType type, string uuid_str,
+    string event_fd_path, string table_fd_path, string meta_fd_path,
+    bool scope) {
+  uuid = uuid_str;
+  prog_uuid[name] = uuid_str;
+  std::unique_ptr<FileSystem> fs = make_unique<FileSystem>(
+      fs_prefix, event_fd_path, table_fd_path, meta_fd_path);
+  fs_ = std::move(fs);
+  return Load(type);
 }
 
 bool IOModule::Init(
@@ -64,6 +76,43 @@ bool IOModule::Init(
     return false;
 
   return Load(fs_prefix, type, scope);
+}
+
+bool IOModule::Load(ModuleType type) {
+  bool ret = true;
+  std::ifstream t_file, m_file, e_file;
+  path pevent;
+  path pmeta;
+  path ptable;
+  string e_line, t_line, m_line;
+  string file_name;
+  bool scope = false;
+
+  t_file.open(fs_->GetTableFile());
+  m_file.open(fs_->GetMetaFile());
+  e_file.open(fs_->GetEventFile());
+
+  while (getline(e_file, e_line)) {
+    file_name = e_line.substr(e_line.find_last_of("/") + 1);
+    std::unique_ptr<Event> ev = make_unique<Event>(file_name);
+    Event *ev_tmp = ev.get();
+    event[file_name] = std::move(ev);
+    ret = ev_tmp->InitEvent(this, type, e_line);
+  }
+  e_file.close();
+
+  while (getline(t_file, t_line)) {
+    getline(m_file, m_line);
+    file_name = t_line.substr(t_line.find_last_of("/") + 1);
+    std::unique_ptr<Table> tb = make_unique<Table>(file_name, scope);
+    Table *tb_tmp = tb.get();
+    table[file_name] = std::move(tb);
+    file_name = m_line.substr(m_line.find_last_of("/") + 1);
+    ret = tb_tmp->InitTable(this, t_line, m_line);
+  }
+  t_file.close();
+  m_file.close();
+  return ret;
 }
 
 bool IOModule::Load(string fs_prefix, ModuleType type, bool scope) {
@@ -114,7 +163,6 @@ std::vector<Table> IOModule::ShowStates(string module_name) {
   // Lookup the module in the filesystem
   // return the all the table object beloging to the module
   string uuid_str;
-  FileSystem fs;
   string pathname;
   bool ret;
   vector<Table> tables;
@@ -122,12 +170,12 @@ std::vector<Table> IOModule::ShowStates(string module_name) {
   path p;
 
   uuid_str = NameToUuid(module_name);
-  ret = fs.MakePathName(p, uuid_str, TABLE, "", false);
+  ret = fs_->MakePathName(p, uuid_str, TABLE, "", false);
   if (!ret) {
     cout << "ERROR DETECTED in making pathname" << endl;
     return tables;
   }
-  v = fs.GetFiles(p);
+  v = fs_->GetFiles(p);
   cout << "TABLES:" << endl;
   for (vector<string>::const_iterator it(v.begin()), it_end(v.end());
        it != it_end; ++it) {
@@ -141,7 +189,6 @@ vector<Event> IOModule::ShowEvents(string module_name) {
   // Lookup the module in the filesystem
   // return the all the event object beloging to the module
   string uuid_str;
-  FileSystem fs;
   string pathname;
   bool ret;
   vector<Event> events;
@@ -149,14 +196,13 @@ vector<Event> IOModule::ShowEvents(string module_name) {
   path p;
 
   uuid_str = NameToUuid(module_name);
-  ret = fs.MakePathName(p, uuid_str, EVENT, "", false);
+  ret = fs_->MakePathName(p, uuid_str, EVENT, "", false);
   if (!ret) {
     cout << "ERROR DETECTED in making pathname" << endl;
     return events;
   }
 
-  v = fs.GetFiles(p);
-
+  v = fs_->GetFiles(p);
   cout << "EVENTS:" << endl;
   for (vector<string>::const_iterator it(v.begin()), it_end(v.end());
        it != it_end; ++it) {

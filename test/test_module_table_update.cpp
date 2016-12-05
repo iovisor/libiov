@@ -32,31 +32,39 @@ using std::unique_ptr;
 using namespace iov;
 
 TEST_CASE("test update local table element", "[module_update_get]") {
-  std::string t_file, m_file;
-  Table table;
-  std::ifstream tableFile, metaFile;
-  int fd_table = 0;
+  std::string tableFile, metaFile, eventFile, uuid_str, uuid_test;
   uint32_t key;
+  std::ifstream uuidFile;
+  bool scope = false;
   int ret;
   struct descr item;
+  std::string module_name = "brigde";
+  FileSystem *fs;
+  Table *tb;
 
   struct packet_ {
     uint64_t rx_pkt;
     uint64_t tx_pkt;
   } packet;
 
-  tableFile.open("/var/tmp/table.txt");
-  metaFile.open("/vat/tmp/meta.txt");
-  getline(tableFile, t_file);
-  getline(metaFile, m_file);
-  tableFile.close();
-  metaFile.close();
+  tableFile = "/var/tmp/table.txt";
+  metaFile = "/var/tmp/meta.txt";
+  eventFile = "/var/tmp/module.txt";
 
-  FileSystem fs(t_file, m_file);
+  uuidFile.open("/var/tmp/uuid.txt");
+  getline(uuidFile, uuid_str);
+  uuidFile.close();
+
+  auto mod = unique_ptr<IOModule>(new IOModule(module_name));
+  REQUIRE(mod->Init("libiov/", NET_FORWARD, uuid_str, eventFile, tableFile,
+              metaFile, scope) == true);
+  uuid_test = mod->NameToUuid(module_name);
+  REQUIRE(uuid_test == uuid_str);
+
+  tb = mod->table["num_ports"].get();
 
   key = 0;
   packet.rx_pkt = 25;
   packet.tx_pkt = 30;
-  // DAVIDE for now pass the address
-  REQUIRE(table.Update(&fs, &key, &packet, BPF_ANY) == 0);
+  REQUIRE(tb->Update(TABLE, &key, &packet, BPF_ANY) == 0);
 }

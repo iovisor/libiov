@@ -59,9 +59,11 @@ class Table {
 
  public:
   Table();
+  Table(const std::string name, bool scope);
   Table(const std::string name, bool scope, size_t key_size, size_t leaf_size);
   ~Table();
 
+  bool InitTable(IOModule *module, std::string t_file, std::string m_file);
   bool InitTable(IOModule *module, size_t index);
 
   // Api to set the table scope (local or global)
@@ -74,7 +76,7 @@ class Table {
   int GetTableElements(std::map<std::string, std::string> &item);
 
   // Api to display key/value pair
-  int ShowTableElements(FileSystem fs);
+  int ShowTableElements();
 
   void DumpItem(std::string item);
 
@@ -82,15 +84,19 @@ class Table {
       bpf_map_type map_type, int key_size, int leaf_size, int max_entries);
 
   // Api to Update an element of the table
-  int Update(FileSystem *fs, void *key, void *value, uint64_t flags);
+  int Update(obj_type_t type, void *key, void *value, uint64_t flags);
 
   // Api to Delete an element of the table
-  int Delete(int fd, void *key);
+  int Delete(obj_type_t type, void *key);
 
   // Api to  Lookup an element of the table (counters etc...)
-  int Lookup(int fd, void *key, void *value);
+  int Lookup(obj_type_t type, void *key, void *value);
 
   // Api to get the next key after the key of the map in fd
-  int GetKey(int fd, void *key, void *next_key);
+  int GetKey(obj_type_t type, void *key, void *next_key);
+  std::string GetTableFdPath();
+  std::string GetMetaFdPath();
+  int GetTableFileDescriptor();
+  int GetMetaFileDescriptor();
 };
 }  // namespace iov

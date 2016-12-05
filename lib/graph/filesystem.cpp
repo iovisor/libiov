@@ -37,7 +37,10 @@ namespace iov {
 
 FileSystem::FileSystem() { root_path = RootPath; }
 FileSystem::FileSystem(string prefix) { root_path = RootPath + prefix; }
-FileSystem::FileSystem(string t_data, string m_data) {
+FileSystem::FileSystem(
+    string prefix, string e_data, string t_data, string m_data) {
+  root_path = RootPath + prefix;
+  e_file = e_data;
   m_file = m_data;
   t_file = t_data;
 }
@@ -56,6 +59,12 @@ int FileSystem::Save(path p, int fd) {
   return ret;
 }
 
+int FileSystem::Open(string file) {
+  int ret = 0;
+  ret = bpf_obj_get(file.c_str());
+  return ret;
+}
+
 /* Open
  * api to retrive the file descriptor of a bpf program, bpf table.
  * pathname will have the location in the filesytem. Check filesytem.h
@@ -64,18 +73,26 @@ int FileSystem::Save(path p, int fd) {
 
 int FileSystem::Open(obj_type_t obj_type) {
   int ret = 0;
-  const char *file = NULL;
+  std::ifstream fd_file;
+  std::string fd;
+
   switch (obj_type) {
+  case EVENT:
+    fd_file.open(e_file.c_str());
+    break;
   case TABLE:
-    file = t_file.c_str();
+    fd_file.open(t_file.c_str());
     break;
   case META:
-    file = m_file.c_str();
+    fd_file.open(m_file.c_str());
     break;
   default:
     std::cout << "Not a valid file" << std::endl;
+    return -1;
   }
-  ret = bpf_obj_get(file);
+  getline(fd_file, fd);
+  fd_file.close();
+  ret = bpf_obj_get(fd.c_str());
   return ret;
 }
 
@@ -156,7 +173,6 @@ bool FileSystem::dirExists(string dir_path) {
 int FileSystem::DeleteFilesInDirectory(string dirpath, bool recursive) {
   if (dirpath.empty())
     return 0;
-
   auto *folder = opendir(dirpath.c_str());
   if (folder == NULL)
     return errno;
@@ -203,7 +219,7 @@ int FileSystem::DeleteFilesInDirectory(string dirpath, bool recursive) {
  */
 
 int FileSystem::Delete(string pathname, bool recursive) {
-  pathname = root_path + pathname;
+  pathname = RootPath + pathname;
   DeleteFilesInDirectory(pathname, recursive);
   return 0;
 }
@@ -284,4 +300,8 @@ vector<string> FileSystem::GetFiles(path p) {
   }
   return v;
 }
+
+string FileSystem::GetTableFile() { return t_file; }
+string FileSystem::GetMetaFile() { return m_file; }
+string FileSystem::GetEventFile() { return e_file; }
 }  // namespace iov

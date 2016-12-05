@@ -35,18 +35,28 @@ using namespace boost::filesystem;
 
 TEST_CASE("test show table", "[module_table_show]") {
   std::string t_data, m_data;
-  std::ifstream tableFile, metaFile;
+  std::string tableFile, metaFile, eventFile, uuid_str, uuid_test;
+  std::ifstream uuidFile;
   int ret = 0;
-  Table table;
+  bool scope = false;
+  Table *tb;
+  std::string module_name = "brigde";
 
-  tableFile.open("/var/tmp/table.txt");
-  metaFile.open("/var/tmp/meta.txt");
-  getline(tableFile, t_data);
-  getline(metaFile, m_data);
-  tableFile.close();
-  metaFile.close();
+  tableFile = "/var/tmp/table.txt";
+  metaFile = "/var/tmp/meta.txt";
+  eventFile = "/var/tmp/module.txt";
 
-  FileSystem fs(t_data, m_data);
+  uuidFile.open("/var/tmp/uuid.txt");
+  getline(uuidFile, uuid_str);
+  uuidFile.close();
 
-  REQUIRE((ret = table.ShowTableElements(fs)) == 0);
+  auto mod = unique_ptr<IOModule>(new IOModule(module_name));
+  REQUIRE(mod->Init("libiov/", NET_FORWARD, uuid_str, eventFile, tableFile,
+              metaFile, scope) == true);
+  uuid_test = mod->NameToUuid(module_name);
+  REQUIRE(uuid_test == uuid_str);
+
+  tb = mod->table["num_ports"].get();
+
+  REQUIRE(tb->ShowTableElements() == 0);
 }

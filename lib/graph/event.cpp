@@ -41,6 +41,24 @@ Event::Event() {}
 Event::Event(std::string name) { event_name = name; }
 Event::~Event() {}
 
+bool Event::InitEvent(IOModule *module, ModuleType type, string file) {
+  string file_path;
+  int fd;
+  FileSystem *fs = module->GetFileSystemHandler();
+
+  switch (type) {
+  case NET_FORWARD:
+    fd = fs->Open(file.c_str());
+    prog_.reset(new FileDesc(fd));
+    if (*prog_ < 0)
+      return false;
+    break;
+  default: {}
+  }
+
+  return true;
+}
+
 bool Event::InitEvent(
     IOModule *module, size_t index, ModuleType type, bool scope) {
   path p;
@@ -82,4 +100,5 @@ int Event::GetFileDescriptor() {
   return *fd;
 }
 
+string Event::GetFdPath() { return fd_path.string(); }
 }  // End of namespace iov

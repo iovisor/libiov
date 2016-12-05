@@ -36,12 +36,11 @@ using namespace iov;
 
 TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
   int fd, meta_fd;
-  // DAVIDE comment out
-  // FileSystem fs("libiov/");
   Event *event_list;
   Table *table;
   ebpf::BPFModule *bpf_mod;
   bool scope = false;
+  string fd_path;
   string pathname;
   string text =
       "struct packet { u64 "
@@ -52,10 +51,10 @@ TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
 
   std::ofstream uuidFile, moduleFile, tableFile, metaFile;
 
-  moduleFile.open("/var/tmp/module.txt");
-  tableFile.open("/var/tmp/table.txt");
-  metaFile.open("/var/tmp/meta.txt");
-  uuidFile.open("/var/tmp/uuid.txt");
+  moduleFile.open("/var/tmp/module.txt", std::ios::app);
+  tableFile.open("/var/tmp/table.txt", std::ios::app);
+  metaFile.open("/var/tmp/meta.txt", std::ios::app);
+  uuidFile.open("/var/tmp/uuid.txt", std::ios::app);
 
   auto mod = unique_ptr<IOModule>(new IOModule());
   REQUIRE(mod->Init("libiov/", std::move(text), NET_FORWARD, scope) == true);
@@ -68,15 +67,18 @@ TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
 
   for (std::map<const std::string, std::unique_ptr<Event>>::iterator it =
            mod->event.begin();
-       it != mod->event.end(); ++it)
-    moduleFile << it->second->fd_path.string() << std::endl;
+       it != mod->event.end(); ++it) {
+    fd_path = it->second->GetFdPath();
+    moduleFile << fd_path << std::endl;
+  }
 
   for (std::map<const std::string, std::unique_ptr<Table>>::iterator it =
            mod->table.begin();
        it != mod->table.end(); ++it) {
-    // DAVIDE path_fd end meta should be retrieve bh functions
-    // tableFile << it->second->path_table_fd.string() << std::endl;
-    // metaFile << it->second->path_meta_fd.string() << std::endl;
+    fd_path = it->second->GetTableFdPath();
+    tableFile << fd_path << std::endl;
+    fd_path = it->second->GetMetaFdPath();
+    metaFile << fd_path << std::endl;
   }
   moduleFile.close();
   tableFile.close();

@@ -33,28 +33,33 @@ using namespace iov;
 
 TEST_CASE("test lookup local table element", "[module_table_lookup]") {
   std::string f_table, m_data;
-  FileSystem fs;
-  std::ifstream tableFile, metaFile;
-  int table_fd = 0;
-  int meta_fd = 0;
+  std::string tableFile, metaFile, eventFile, uuid_str, uuid_test;
+  std::ifstream uuidFile;
+  bool scope = false;
+  std::string module_name = "brigde";
   int ret = 0;
   uint32_t key;
-  Table table;
   struct descr item;
+  Table *tb;
 
-  tableFile.open("/var/tmp/table.txt");
-  metaFile.open("/var/tmp/meta.txt");
-  getline(tableFile, f_table);
-  getline(metaFile, m_data);
-  tableFile.close();
-  metaFile.close();
+  tableFile = "/var/tmp/table.txt";
+  metaFile = "/var/tmp/meta.txt";
+  eventFile = "/var/tmp/module.txt";
 
-  // DAVIDE We need to Init FS before callling OPen
-  REQUIRE((table_fd = fs.Open(TABLE)) > 0);
-  REQUIRE((meta_fd = fs.Open(META)) > 0);
+  uuidFile.open("/var/tmp/uuid.txt");
+  getline(uuidFile, uuid_str);
+  uuidFile.close();
+
+  auto mod = unique_ptr<IOModule>(new IOModule(module_name));
+  REQUIRE(mod->Init("libiov/", NET_FORWARD, uuid_str, eventFile, tableFile,
+              metaFile, scope) == true);
+  uuid_test = mod->NameToUuid(module_name);
+  REQUIRE(uuid_test == uuid_str);
+
+  tb = mod->table["num_ports"].get();
 
   key = 0;
-  REQUIRE((ret = table.Lookup(meta_fd, &key, &item)) == 0);
+  REQUIRE(tb->Lookup(META, &key, &item) == 0);
 
   std::string key_size(item.key_size, 'f');
   std::string next_key_size(item.key_size, '\0');
@@ -64,9 +69,9 @@ TEST_CASE("test lookup local table element", "[module_table_lookup]") {
     uint64_t tx_pkt;
   } test;
 
-  REQUIRE((ret = table.GetKey(table_fd, (void *)key_size.c_str(),
+  REQUIRE((ret = tb->GetKey(TABLE, (void *)key_size.c_str(),
                (void *)next_key_size.c_str())) == 0);
-  REQUIRE((ret = table.Lookup(table_fd, (void *)next_key_size.c_str(),
+  REQUIRE((ret = tb->Lookup(TABLE, (void *)next_key_size.c_str(),
                (void *)packet.c_str())) == 0);
 
   memcpy(&test, packet.data(), item.leaf_size);

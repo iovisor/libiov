@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <cstdio>
 #include <memory>
 #include <vector>
 
@@ -35,24 +36,44 @@ using namespace iov;
 using namespace std;
 
 TEST_CASE("test show module attributes", "[module_show]") {
-  FileSystem fs;
-  string uuid_str, uuid_test;
-  IOModule module;
+  std::string t_file, m_file, uuid_str, e_file;
+  Table table;
+  std::string uuidFile, tableFile, metaFile, eventFile;
+  std::ifstream File;
+  int fd_table = 0;
+  uint32_t key;
+  int ret;
+  struct descr item;
+  metaFile = "/var/tmp/meta.txt";
+  eventFile = "/var/tmp/module.txt";
+  tableFile = "/var/tmp/table.txt";
+  uuidFile = "/var/tmp/uuid.txt";
+  File.open(uuidFile);
+
+  getline(File, uuid_str);
+  File.close();
+
+  string uuid_test;
   string module_name = "bridge";
-  ifstream uuidFile;
   vector<Table> tables;
   vector<Event> events;
+  bool scope = false;
+  FileSystem *fs;
 
-  uuidFile.open("/var/tmp/uuid.txt");
-  getline(uuidFile, uuid_str);
-  uuidFile.close();
+  auto mod = unique_ptr<IOModule>(new IOModule(module_name));
+  REQUIRE(mod->Init("libiov/", NET_FORWARD, uuid_str, eventFile, tableFile,
+              metaFile, scope) == true);
 
-  module.prog_uuid[module_name] = uuid_str;
-  uuid_test = module.NameToUuid(module_name);
+  uuid_test = mod->NameToUuid(module_name);
   REQUIRE(uuid_test == uuid_str);
 
-  tables = module.ShowStates(module_name);
-  events = module.ShowEvents(module_name);
+  tables = mod->ShowStates(module_name);
+  events = mod->ShowEvents(module_name);
 
-  fs.Delete("modules", true);
+  fs = mod->GetFileSystemHandler();
+  fs->Delete("libiov", true);
+  std::remove(tableFile.c_str());
+  std::remove(metaFile.c_str());
+  std::remove(eventFile.c_str());
+  std::remove(uuidFile.c_str());
 }

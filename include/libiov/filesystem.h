@@ -75,14 +75,17 @@ class FileSystem {
   std::string root_path;
   std::string m_file;
   std::string t_file;
+  std::string e_file;
 
  public:
   FileSystem();
   FileSystem(std::string prefix);
-  FileSystem(std::string t_data, std::string m_data);
+  FileSystem(std::string prefix, std::string e_data, std::string t_data,
+      std::string m_data);
   ~FileSystem();
   int Save(boost::filesystem::path p, int fd);
   int Open(obj_type_t obj_type);
+  int Open(std::string file);
   void Show(std::string pathname, std::vector<std::string> &files);
   int Delete(std::string pathname, bool recursive);
   int CreateDir(std::string path);
@@ -91,5 +94,8 @@ class FileSystem {
   bool Replace(
       std::string &str, const std::string &from, const std::string &to);
   std::vector<std::string> GetFiles(boost::filesystem::path p);
+  std::string GetTableFile();
+  std::string GetMetaFile();
+  std::string GetEventFile();
 };
 }  // namespace iov

@@ -44,7 +44,30 @@ Table::Table(const string name, bool scope, size_t s_key, size_t s_leaf) {
   key_size = s_key;
   leaf_size = s_leaf;
 }
+Table::Table(const string name, bool scope) {
+  table_name = name;
+  global = scope;
+}
 Table::~Table() {}
+
+bool Table::InitTable(IOModule *module, string t_file, string m_file) {
+  FileSystem *fs = module->GetFileSystemHandler();
+
+  tableprog_.reset(new FileDesc(fs->Open(t_file.c_str())));
+  if (*tableprog_ < 0)
+    return false;
+
+  fd_table = *tableprog_;
+
+  metaprog_.reset(new FileDesc(fs->Open(m_file.c_str())));
+
+  if (*metaprog_ < 0)
+    return false;
+
+  fd_meta = *metaprog_;
+
+  return true;
+}
 
 bool Table::InitTable(IOModule *module, size_t index) {
   path p;
@@ -65,7 +88,6 @@ bool Table::InitTable(IOModule *module, size_t index) {
     return false;
   }
 
-  std::cout << "PATH: " << p.string() << std::endl;
   p += table_name;
   path_table_fd = p;
   p += "_metadata";
@@ -91,7 +113,7 @@ bool Table::InitTable(IOModule *module, size_t index) {
   ret = fs->Save(path_meta_fd, *metaprog_);
 
   uint32_t key = 0;
-  Update(fs, &key, &item, BPF_ANY);
+  Update(META, &key, &item, BPF_ANY);
 
   return true;
 }
@@ -107,9 +129,19 @@ int Table::Insert(
 }
 
 // Update updates the map in fd with the given value in the given key.
-int Table::Update(FileSystem *fs, void *key, void *value, uint64_t flags) {
-  int ret;
-  int fd = fs->Open(TABLE);
+int Table::Update(obj_type_t type, void *key, void *value, uint64_t flags) {
+  int fd, ret;
+  switch (type) {
+  case TABLE:
+    fd = *tableprog_;
+    break;
+  case META:
+    fd = *metaprog_;
+    break;
+  default:
+    std::cout << "Not a valid obj type" << std::endl;
+    return -1;
+  }
   ret = bpf_update_elem(fd, key, value, flags);
 
   return ret;
@@ -117,22 +149,57 @@ int Table::Update(FileSystem *fs, void *key, void *value, uint64_t flags) {
 
 // Lookup looks up for the map value stored in fd with the given key.
 // The value is stored in the value pointer.
-int Table::Lookup(int fd, void *key, void *value) {
-  int ret;
+int Table::Lookup(obj_type_t type, void *key, void *value) {
+  int ret, fd;
+  switch (type) {
+  case TABLE:
+    fd = *tableprog_;
+    break;
+  case META:
+    fd = *metaprog_;
+    break;
+  default:
+    std::cout << "Not a valid obj type" << std::endl;
+    return -1;
+  }
+
   ret = bpf_lookup_elem(fd, key, value);
   return ret;
 }
 
 // Delete deletes the map element with the given key.
-int Table::Delete(int fd, void *key) {
-  int ret;
+int Table::Delete(obj_type_t type, void *key) {
+  int ret, fd;
+  switch (type) {
+  case TABLE:
+    fd = *tableprog_;
+    break;
+  case META:
+    fd = *metaprog_;
+    break;
+  default:
+    std::cout << "Not a valid obj type" << std::endl;
+    return -1;
+  }
   ret = bpf_delete_elem(fd, key);
   return ret;
 }
 
 // GetKey stores, in next_key, the next key after the key of the map in fd.
-int Table::GetKey(int fd, void *key, void *next_key) {
-  int ret;
+int Table::GetKey(obj_type_t type, void *key, void *next_key) {
+  int ret, fd;
+  switch (type) {
+  case TABLE:
+    fd = *tableprog_;
+    break;
+  case META:
+    fd = *metaprog_;
+    break;
+  default:
+    std::cout << "Not a valid obj type" << std::endl;
+    return -1;
+  }
+
   ret = bpf_get_next_key(fd, key, next_key);
   return ret;
 }
@@ -147,7 +214,7 @@ int Table::GetTableElements(std::map<std::string, std::string> &element) {
   struct descr item;
 
   key_meta = 0;
-  ret = Lookup(fd_meta, &key_meta, &item);
+  ret = Lookup(META, &key_meta, &item);
   if (ret != 0) {
     return ret;
   }
@@ -156,7 +223,7 @@ int Table::GetTableElements(std::map<std::string, std::string> &element) {
   std::string next_key(item.key_size, '\0');
   std::string leaf(item.leaf_size, '\0');
   for (;;) {
-    ret = GetKey(fd_table, (void *)key.c_str(), (void *)next_key.c_str());
+    ret = GetKey(TABLE, (void *)key.c_str(), (void *)next_key.c_str());
 
     if (ret != 0) {
       // Should return a value for this that is not 0
@@ -166,7 +233,7 @@ int Table::GetTableElements(std::map<std::string, std::string> &element) {
       break;
     }
 
-    ret = Lookup(fd_table, (void *)next_key.c_str(), (void *)leaf.c_str());
+    ret = Lookup(TABLE, (void *)next_key.c_str(), (void *)leaf.c_str());
     if (ret != 0) {
       return ret;
     }
@@ -189,10 +256,7 @@ void Table::DumpItem(std::string item) {
   std::cout << std::endl;
 }
 
-int Table::ShowTableElements(FileSystem fs) {
-  fd_meta = fs.Open(TABLE);
-  fd_table = fs.Open(META);
-
+int Table::ShowTableElements() {
   std::map<std::string, std::string> items;
   int ret = 0;
   ret = GetTableElements(items);
@@ -216,5 +280,17 @@ int Table::ShowTableElements(FileSystem fs) {
 void Table::SetTableScope(bool scope) { global = scope; }
 
 bool Table::GetTableScope() { return global; }
+
+string Table::GetTableFdPath() { return path_table_fd.string(); }
+string Table::GetMetaFdPath() { return path_meta_fd.string(); }
+
+int Table::GetTableFileDescriptor() {
+  FileDesc *fd = tableprog_.get();
+  return *fd;
+}
+int Table::GetMetaFileDescriptor() {
+  FileDesc *fd = metaprog_.get();
+  return *fd;
+}
 
 }  // End of namespace iov

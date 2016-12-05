@@ -57,20 +57,23 @@ class IOModule {
   std::string uuid;
   size_t num_functions;
   size_t num_tables;
-
-  void GenerateUuid(std::string &uuid_str);
-  bool Load(std::string fs_prefix, ModuleType type, bool scope);
-  bool Init(
-      std::string fs_prefix, std::string &&text, ModuleType type, bool scope);
-  ebpf::BPFModule *GetBpfModule() const;
-  FileSystem *GetFileSystemHandler() const;
-
   // Random number that uniquily identify a module. Look at filestem.h
   // for filesystem layout
   std::map<std::string, std::string> prog_uuid;
 
   // Human readable name of the module to translate the uuid
   std::string name;
+
+  void GenerateUuid(std::string &uuid_str);
+  bool Load(ModuleType type);
+  bool Load(std::string fs_prefix, ModuleType type, bool scope);
+  bool Init(
+      std::string fs_prefix, std::string &&text, ModuleType type, bool scope);
+  bool Init(std::string fs_prefix, ModuleType type, std::string uuid_str,
+      std::string even_fd_path, std::string table_pd_path,
+      std::string meta_fd_path, bool scope);
+  ebpf::BPFModule *GetBpfModule() const;
+  FileSystem *GetFileSystemHandler() const;
 
   void InsertTable(Table table);
   void InsertEvent(Event event);

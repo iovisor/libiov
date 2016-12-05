@@ -39,18 +39,20 @@ class Event {
   std::string event_name;
   int event_type;
   int direction;
+  boost::filesystem::path fd_path;
 
  public:
   Event();
   Event(std::string name);
   ~Event();
 
+  bool InitEvent(IOModule *module, ModuleType type, std::string file);
   bool InitEvent(IOModule *module, size_t index, ModuleType type, bool scope);
-  boost::filesystem::path fd_path;
   // Api to load the event in kernel
 
   // Api to return the file descriptor
   int GetFileDescriptor();
+  std::string GetFdPath();
 };
 
 }  // namespace iov
