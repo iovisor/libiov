@@ -33,7 +33,6 @@ using std::unique_ptr;
 
 using namespace iov::internal;
 using namespace std;
-using namespace boost::filesystem;
 
 namespace iov {
 
@@ -61,7 +60,7 @@ bool Event::InitEvent(IOModule *module, ModuleType type, string file) {
 
 bool Event::InitEvent(
     IOModule *module, size_t index, ModuleType type, bool scope) {
-  path p;
+  string p;
   int ret = 0;
   string file_path;
   FileSystem *fs = module->GetFileSystemHandler();
@@ -85,7 +84,7 @@ bool Event::InitEvent(
   }
 
   p += event_name;
-  fd_path = p.string();
+  fd_path = p;
 
   ret = fs->Save(fd_path, *prog_);
   if (ret < 0) {
@@ -100,5 +99,5 @@ int Event::GetFileDescriptor() {
   return *fd;
 }
 
-string Event::GetFdPath() { return fd_path.string(); }
+string Event::GetFdPath() { return fd_path; }
 }  // End of namespace iov

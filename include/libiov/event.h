@@ -39,7 +39,7 @@ class Event {
   std::string event_name;
   int event_type;
   int direction;
-  boost::filesystem::path fd_path;
+  std::string fd_path;
 
  public:
   Event();

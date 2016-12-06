@@ -20,11 +20,12 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <uuid/uuid.h>
-#include <boost/filesystem.hpp>
+#include <algorithm>
 #include <fstream>
 #include <future>
 #include <iostream>
 #include <string>
+#include <vector>
 
 // Requires the following module to be install
 // apt-get install libboost-filesystem-dev
@@ -83,18 +84,18 @@ class FileSystem {
   FileSystem(std::string prefix, std::string e_data, std::string t_data,
       std::string m_data);
   ~FileSystem();
-  int Save(boost::filesystem::path p, int fd);
+  int Save(std::string p, int fd);
   int Open(std::string file);
   void Show(std::string pathname, std::vector<std::string> &files);
   int Delete(std::string pathname, bool recursive);
-  int CreateDir(std::string path);
-  bool MakePathName(boost::filesystem::path &p, IOModule *module,
-      obj_type_t obj_type, std::string name, bool global);
+  bool MakePathName(std::string &p, IOModule *module, obj_type_t obj_type,
+      std::string name, bool global);
   bool Replace(
       std::string &str, const std::string &from, const std::string &to);
-  std::vector<std::string> GetFiles(boost::filesystem::path p);
+  std::vector<std::string> GetFiles(std::string p);
   std::string GetTableFile();
   std::string GetMetaFile();
   std::string GetEventFile();
+  int createPath(mode_t mode, const std::string &rootPath, std::string &path);
 };
 }  // namespace iov

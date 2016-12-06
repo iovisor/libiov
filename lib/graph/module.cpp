@@ -31,7 +31,6 @@ using std::future;
 using std::promise;
 using std::string;
 using namespace iov::internal;
-using namespace boost::filesystem;
 using namespace std;
 
 namespace iov {
@@ -81,9 +80,6 @@ bool IOModule::Init(
 bool IOModule::Load(ModuleType type) {
   bool ret = true;
   std::ifstream t_file, m_file, e_file;
-  path pevent;
-  path pmeta;
-  path ptable;
   string e_line, t_line, m_line;
   string file_name;
   bool scope = false;
@@ -117,9 +113,6 @@ bool IOModule::Load(ModuleType type) {
 
 bool IOModule::Load(string fs_prefix, ModuleType type, bool scope) {
   bool ret = true;
-  path pevent;
-  path pmeta;
-  path ptable;
 
   // In this construnctor we can pass some arg. We need to
   // pass the root of the filesystem like libiov/ or something else
@@ -167,7 +160,7 @@ std::vector<Table> IOModule::ShowStates(string module_name) {
   bool ret;
   vector<Table> tables;
   vector<string> v;
-  path p;
+  string p;
 
   uuid_str = NameToUuid(module_name);
   ret = fs_->MakePathName(p, this, TABLE, "", false);
@@ -193,7 +186,7 @@ vector<Event> IOModule::ShowEvents(string module_name) {
   bool ret;
   vector<Event> events;
   vector<string> v;
-  path p;
+  string p;
 
   uuid_str = NameToUuid(module_name);
   ret = fs_->MakePathName(p, this, EVENT, "", false);

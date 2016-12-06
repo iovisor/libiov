@@ -38,8 +38,8 @@ struct descr {
 
 class Table {
  private:
-  boost::filesystem::path path_table_fd;
-  boost::filesystem::path path_meta_fd;
+  std::string path_table_fd;
+  std::string path_meta_fd;
   int fd_table;
   int fd_meta;
   FileDescPtr tableprog_;

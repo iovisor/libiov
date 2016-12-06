@@ -18,7 +18,6 @@
 
 #include <uuid/uuid.h>
 #include <uuid/uuid.h>
-#include <boost/filesystem.hpp>
 #include <future>
 #include <string>
 

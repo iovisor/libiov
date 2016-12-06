@@ -20,7 +20,6 @@
 #include <bcc/bpf_common.h>
 #include <bcc/bpf_module.h>
 #include <bcc/libbpf.h>
-#include <boost/system/error_code.hpp>
 
 #include "libiov/event.h"
 #include "libiov/filesystem.h"
@@ -31,7 +30,6 @@ using std::future;
 using std::promise;
 using namespace iov::internal;
 using namespace std;
-using namespace boost::filesystem;
 
 namespace iov {
 
@@ -53,9 +51,9 @@ FileSystem::~FileSystem() {}
  * file_name is the file where the fd will be save
  */
 
-int FileSystem::Save(path p, int fd) {
+int FileSystem::Save(string p, int fd) {
   int ret = 0;
-  ret = bpf_obj_pin(fd, p.string().c_str());
+  ret = bpf_obj_pin(fd, p.c_str());
   return ret;
 }
 
@@ -201,21 +199,36 @@ bool FileSystem::Replace(string &str, const string &from, const string &to) {
   return true;
 }
 
-int FileSystem::CreateDir(string dirpath) {
-  int ret = 0;
-  boost::filesystem::path p(dirpath.c_str());
-  try {
-    boost::filesystem::create_directories(p);
-  } catch (boost::filesystem::filesystem_error &ec) {
-    ret = -1;
-    cout << "exception caught: " << ec.code().message() << endl;
+int FileSystem::createPath(
+    mode_t mode, const std::string &rootPath, std::string &path) {
+  struct stat st;
+
+  for (std::string::iterator iter = path.begin(); iter != path.end();) {
+    std::string::iterator newIter = std::find(iter, path.end(), '/');
+    std::string newPath = rootPath + std::string(path.begin(), newIter);
+
+    if (stat(newPath.c_str(), &st) != 0) {
+      if (mkdir(newPath.c_str(), mode) != 0 && errno != EEXIST) {
+        std::cout << "cannot create folder [" << newPath
+                  << "] : " << strerror(errno) << std::endl;
+        return -1;
+      }
+    } else if (!S_ISDIR(st.st_mode)) {
+      errno = ENOTDIR;
+      std::cout << "path [" << newPath << "] not a dir " << std::endl;
+      return -1;
+    }
+
+    iter = newIter;
+    if (newIter != path.end())
+      ++iter;
   }
-  return ret;
+  return 0;
 }
 
-bool FileSystem::MakePathName(
-    path &p, IOModule *module, obj_type_t obj_type, string name, bool global) {
-  string pathname = root_path;
+bool FileSystem::MakePathName(string &p, IOModule *module, obj_type_t obj_type,
+    string name, bool global) {
+  string pathname;
   string uuid = module->GetUuid();
   switch (obj_type) {
   case EVENT: {
@@ -235,37 +248,41 @@ bool FileSystem::MakePathName(
     return false;
   }
 
-  p = pathname.c_str();
-
-  if (create_directories(p)) {
+  if (createPath(0777, root_path.c_str(), pathname)) {
     cout << "mkdir " << pathname << " failed: " << strerror(errno) << endl;
     return false;
   }
   if (!name.empty()) {
     pathname.append(name).append("/");
-    p = pathname.c_str();
-    if (create_directories(p)) {
+    if (createPath(0777, root_path.c_str(), pathname)) {
       cout << "mkdir " << pathname << " failed: " << strerror(errno) << endl;
       return false;
     }
   }
 
+  p = root_path + pathname.c_str();
   return true;
 }
 
-vector<string> FileSystem::GetFiles(path p) {
-  string file_name;
-  size_t found;
+vector<string> FileSystem::GetFiles(string p) {
   vector<string> v;
 
-  recursive_directory_iterator dir(p);
-  for (auto &&i : dir) {
-    if (!is_directory(i)) {
-      file_name = basename(i.path());
-      found = file_name.find("_metadata");
-      if (found == string::npos)
-        v.push_back(basename(i.path()));
+  if (p.empty())
+    return v;
+
+  auto *folder = opendir(p.c_str());
+  if (folder == NULL) {
+    std::cout << "Could not open dir: " << p << std::endl;
+    return v;
+  }
+
+  struct dirent *next_file;
+
+  while ((next_file = readdir(folder)) != NULL) {
+    if (next_file->d_name[0] == '.') {
+      continue;
     }
+    v.push_back(next_file->d_name);
   }
   return v;
 }

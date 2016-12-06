@@ -31,7 +31,6 @@ using std::string;
 using std::vector;
 using std::unique_ptr;
 using namespace iov;
-using namespace boost::filesystem;
 
 TEST_CASE("test show table", "[module_table_show]") {
   std::string t_data, m_data;

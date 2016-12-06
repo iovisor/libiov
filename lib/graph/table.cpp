@@ -33,7 +33,6 @@ using std::vector;
 using std::unique_ptr;
 
 using namespace iov::internal;
-using namespace boost::filesystem;
 
 namespace iov {
 
@@ -70,7 +69,7 @@ bool Table::InitTable(IOModule *module, string t_file, string m_file) {
 }
 
 bool Table::InitTable(IOModule *module, size_t index) {
-  path p;
+  string p;
   int ret;
   ebpf::BPFModule *bpf_mod = module->GetBpfModule();
   FileSystem *fs = module->GetFileSystemHandler();
@@ -281,8 +280,8 @@ void Table::SetTableScope(bool scope) { global = scope; }
 
 bool Table::GetTableScope() { return global; }
 
-string Table::GetTableFdPath() { return path_table_fd.string(); }
-string Table::GetMetaFdPath() { return path_meta_fd.string(); }
+string Table::GetTableFdPath() { return path_table_fd; }
+string Table::GetMetaFdPath() { return path_meta_fd; }
 
 int Table::GetTableFileDescriptor() {
   FileDesc *fd = tableprog_.get();
