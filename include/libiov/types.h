@@ -24,6 +24,8 @@ enum ModuleType {
   NET_POLICY,
 };
 
+enum obj_type_t { EVENT = 1, TABLE, META };
+
 namespace iov {
 
 namespace internal {

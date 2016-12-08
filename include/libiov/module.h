@@ -43,8 +43,6 @@ class IOModule {
  private:
   std::unique_ptr<ebpf::BPFModule> mod_;
   std::unique_ptr<FileSystem> fs_;
-  std::vector<Table *> tables;
-  std::vector<Event *> events;
   std::map<const std::string, std::unique_ptr<Event>> event;
   std::map<const std::string, std::unique_ptr<Table>> table;
   std::string uuid;
@@ -71,9 +69,6 @@ class IOModule {
       std::string meta_fd_path, bool scope);
   ebpf::BPFModule *GetBpfModule() const;
   FileSystem *GetFileSystemHandler() const;
-
-  void InsertTable(Table table);
-  void InsertEvent(Event event);
 
   // Api to retrive uuid from prog_name
   std::string NameToUuid(std::string module_name);

@@ -216,10 +216,6 @@ string IOModule::NameToUuid(string module_name) {
   return uuid_str;
 }
 
-void IOModule::InsertTable(Table table) { tables.push_back(&table); }
-
-void IOModule::InsertEvent(Event event) { events.push_back(&event); }
-
 std::string IOModule::GetUuid() { return uuid; }
 
 Table *IOModule::GetTable(std::string name) { return table[name].get(); }

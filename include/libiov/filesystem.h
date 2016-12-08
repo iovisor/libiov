@@ -24,14 +24,13 @@
 #include <fstream>
 #include <future>
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
+#include "libiov/types.h"
 
 // Requires the following module to be install
-// apt-get install libboost-filesystem-dev
 // apt-get install uuid uuid-dev
-
-#include "libiov/types.h"
 
 #define RootPath "/sys/fs/bpf/"
 #define LibiovRootPath "/sys/fs/bpf/libiov/"
@@ -49,8 +48,7 @@
 namespace iov {
 
 class IOModule;
-
-enum obj_type_t { EVENT = 1, TABLE, META };
+class Table;
 
 class FileSystem {
   // Root of the filesystem is /sys/fs/bpf/libiov.
@@ -77,6 +75,8 @@ class FileSystem {
   std::string m_file;
   std::string t_file;
   std::string e_file;
+  std::map<const std::string, std::unique_ptr<IOModule>> modules;
+  std::map<const std::string, std::unique_ptr<Table>> tables;
 
  public:
   FileSystem();

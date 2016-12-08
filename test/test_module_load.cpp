@@ -35,13 +35,9 @@ using std::unique_ptr;
 using namespace iov;
 
 TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
-  int fd, meta_fd;
-  Event *event_list;
-  Table *table;
   ebpf::BPFModule *bpf_mod;
   bool scope = false;
   string fd_path;
-  string pathname;
   string text =
       "struct packet { u64 "
       "rx_pkt; u64 tx_pkt; }; BPF_TABLE(\"hash\", uint32_t, struct packet, "
@@ -66,23 +62,17 @@ TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
   string uuid = mod->GetUuid();
   uuidFile << uuid;
 
-  for (std::map<const std::string, std::unique_ptr<Event>>::iterator it =
-           mod->GetFirstEvent();
-       it != mod->GetLastEvent(); ++it) {
-    fd_path = it->second->GetFdPath();
+  std::map<const std::string, std::unique_ptr<Event>>::iterator event;
+  for (event = mod->GetFirstEvent(); event != mod->GetLastEvent(); ++event) {
+    fd_path = event->second->GetFdPath();
     moduleFile << fd_path << std::endl;
   }
 
-  for (std::map<const std::string, std::unique_ptr<Table>>::iterator it =
-           mod->GetFirstTable();
-       it != mod->GetLastTable(); ++it) {
-    fd_path = it->second->GetTableFdPath();
+  std::map<const std::string, std::unique_ptr<Table>>::iterator table;
+  for (table = mod->GetFirstTable(); table != mod->GetLastTable(); ++table) {
+    fd_path = table->second->GetTableFdPath();
     tableFile << fd_path << std::endl;
-    fd_path = it->second->GetMetaFdPath();
+    fd_path = table->second->GetMetaFdPath();
     metaFile << fd_path << std::endl;
   }
-  moduleFile.close();
-  tableFile.close();
-  metaFile.close();
-  uuidFile.close();
 }

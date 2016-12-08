@@ -53,7 +53,6 @@ TEST_CASE("test update local table element", "[module_update_get]") {
 
   uuidFile.open("/var/tmp/uuid.txt");
   getline(uuidFile, uuid_str);
-  uuidFile.close();
 
   auto mod = unique_ptr<IOModule>(new IOModule(module_name));
   REQUIRE(mod->Init("libiov/", NET_FORWARD, uuid_str, eventFile, tableFile,

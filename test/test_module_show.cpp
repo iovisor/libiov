@@ -51,7 +51,6 @@ TEST_CASE("test show module attributes", "[module_show]") {
   File.open(uuidFile);
 
   getline(File, uuid_str);
-  File.close();
 
   string uuid_test;
   string module_name = "bridge";
