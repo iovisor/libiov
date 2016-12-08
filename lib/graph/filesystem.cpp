@@ -35,13 +35,6 @@ namespace iov {
 
 FileSystem::FileSystem() { root_path = RootPath; }
 FileSystem::FileSystem(string prefix) { root_path = RootPath + prefix; }
-FileSystem::FileSystem(
-    string prefix, string e_data, string t_data, string m_data) {
-  root_path = RootPath + prefix;
-  e_file = e_data;
-  m_file = m_data;
-  t_file = t_data;
-}
 FileSystem::~FileSystem() {}
 
 /* Save
@@ -191,6 +184,18 @@ int FileSystem::Delete(string pathname, bool recursive) {
   return 0;
 }
 
+void FileSystem::UpdateIOModule(string name, std::unique_ptr<IOModule> obj) {
+  modules[name] = std::move(obj);
+}
+
+IOModule *FileSystem::GetIOModule(string name) { return modules[name].get(); }
+
+void FileSystem::UpdateTable(string name, std::unique_ptr<Table> obj) {
+  tables[name] = std::move(obj);
+}
+
+Table *FileSystem::GetTable(string name) { return tables[name].get(); }
+
 bool FileSystem::Replace(string &str, const string &from, const string &to) {
   size_t start_pos = str.find(from);
   if (start_pos == string::npos)
@@ -287,7 +292,4 @@ vector<string> FileSystem::GetFiles(string p) {
   return v;
 }
 
-string FileSystem::GetTableFile() { return t_file; }
-string FileSystem::GetMetaFile() { return m_file; }
-string FileSystem::GetEventFile() { return e_file; }
 }  // namespace iov

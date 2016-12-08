@@ -48,12 +48,18 @@ TEST_CASE("test show table", "[module_table_show]") {
   uuidFile.open("/var/tmp/uuid.txt");
   getline(uuidFile, uuid_str);
 
-  auto mod = unique_ptr<IOModule>(new IOModule(module_name));
-  REQUIRE(mod->Init("libiov/", NET_FORWARD, uuid_str, eventFile, tableFile,
-              metaFile, scope) == true);
-  uuid_test = mod->NameToUuid(module_name);
+  std::unique_ptr<FileSystem> fs_ = make_unique<FileSystem>("libiov/");
+  FileSystem *fs_tmp = fs_.get();
+
+  auto mod_ = unique_ptr<IOModule>(
+      new IOModule(module_name, fs_tmp, eventFile, tableFile, metaFile));
+  IOModule *mod_tmp = mod_.get();
+  fs_tmp->UpdateIOModule(module_name, std::move(mod_));
+
+  REQUIRE(mod_tmp->Init(NET_FORWARD, uuid_str, scope) == true);
+  uuid_test = mod_tmp->NameToUuid(module_name);
   REQUIRE(uuid_test == uuid_str);
 
-  tb = mod->GetTable("num_ports");
+  tb = mod_tmp->GetTable("num_ports");
   REQUIRE(tb->ShowTableElements() == 0);
 }

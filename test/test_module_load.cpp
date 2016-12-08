@@ -52,24 +52,32 @@ TEST_CASE("test load and save module fds to filesystem", "[module_load]") {
   metaFile.open("/var/tmp/meta.txt", std::ios::app);
   uuidFile.open("/var/tmp/uuid.txt", std::ios::app);
 
-  auto mod = unique_ptr<IOModule>(new IOModule());
-  REQUIRE(mod->Init("libiov/", std::move(text), NET_FORWARD, scope) == true);
+  std::unique_ptr<FileSystem> fs_ = make_unique<FileSystem>("libiov/");
+  FileSystem *fs_tmp = fs_.get();
 
-  bpf_mod = mod->GetBpfModule();
+  auto mod_ = unique_ptr<IOModule>(new IOModule("bridge", fs_tmp));
+
+  fs_tmp->UpdateIOModule("bridge", std::move(mod_));
+
+  IOModule *mod_tmp = fs_tmp->GetIOModule("bridge");
+  REQUIRE(mod_tmp->Init(std::move(text), NET_FORWARD, scope) == true);
+  bpf_mod = mod_tmp->GetBpfModule();
   size_t num_funcs = bpf_mod->num_functions();
   size_t num_tables = bpf_mod->num_tables();
 
-  string uuid = mod->GetUuid();
+  string uuid = mod_tmp->GetUuid();
   uuidFile << uuid;
 
   std::map<const std::string, std::unique_ptr<Event>>::iterator event;
-  for (event = mod->GetFirstEvent(); event != mod->GetLastEvent(); ++event) {
+  for (event = mod_tmp->GetFirstEvent(); event != mod_tmp->GetLastEvent();
+       ++event) {
     fd_path = event->second->GetFdPath();
     moduleFile << fd_path << std::endl;
   }
 
   std::map<const std::string, std::unique_ptr<Table>>::iterator table;
-  for (table = mod->GetFirstTable(); table != mod->GetLastTable(); ++table) {
+  for (table = mod_tmp->GetFirstTable(); table != mod_tmp->GetLastTable();
+       ++table) {
     fd_path = table->second->GetTableFdPath();
     tableFile << fd_path << std::endl;
     fd_path = table->second->GetMetaFdPath();

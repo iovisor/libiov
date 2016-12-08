@@ -36,14 +36,9 @@ using namespace iov;
 using namespace std;
 
 TEST_CASE("test show module attributes", "[module_show]") {
-  std::string t_file, m_file, uuid_str, e_file;
-  Table table;
+  std::string uuid_str;
   std::string uuidFile, tableFile, metaFile, eventFile;
   std::ifstream File;
-  int fd_table = 0;
-  uint32_t key;
-  int ret;
-  struct descr item;
   metaFile = "/var/tmp/meta.txt";
   eventFile = "/var/tmp/module.txt";
   tableFile = "/var/tmp/table.txt";
@@ -57,20 +52,24 @@ TEST_CASE("test show module attributes", "[module_show]") {
   vector<Table> tables;
   vector<Event> events;
   bool scope = false;
-  FileSystem *fs;
 
-  auto mod = unique_ptr<IOModule>(new IOModule(module_name));
-  REQUIRE(mod->Init("libiov/", NET_FORWARD, uuid_str, eventFile, tableFile,
-              metaFile, scope) == true);
+  std::unique_ptr<FileSystem> fs_ = make_unique<FileSystem>("libiov/");
+  FileSystem *fs_tmp = fs_.get();
 
-  uuid_test = mod->NameToUuid(module_name);
+  auto mod_ = unique_ptr<IOModule>(
+      new IOModule(module_name, fs_tmp, eventFile, tableFile, metaFile));
+  IOModule *mod_tmp = mod_.get();
+  fs_tmp->UpdateIOModule(module_name, std::move(mod_));
+
+  REQUIRE(mod_tmp->Init(NET_FORWARD, uuid_str, scope) == true);
+
+  uuid_test = mod_tmp->NameToUuid(module_name);
   REQUIRE(uuid_test == uuid_str);
 
-  tables = mod->ShowStates(module_name);
-  events = mod->ShowEvents(module_name);
+  tables = mod_tmp->ShowStates(module_name);
+  events = mod_tmp->ShowEvents(module_name);
 
-  fs = mod->GetFileSystemHandler();
-  fs->Delete("libiov", true);
+  fs_tmp->Delete("libiov", true);
   std::remove(tableFile.c_str());
   std::remove(metaFile.c_str());
   std::remove(eventFile.c_str());

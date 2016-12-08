@@ -24,7 +24,7 @@ enum ModuleType {
   NET_POLICY,
 };
 
-enum obj_type_t { EVENT = 1, TABLE, META };
+enum obj_type_t { MODULE = 1, EVENT, TABLE, META };
 
 namespace iov {
 

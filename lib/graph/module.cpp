@@ -36,7 +36,18 @@ using namespace std;
 namespace iov {
 
 IOModule::IOModule() {}
-IOModule::IOModule(string module_name) { name = module_name; }
+IOModule::IOModule(string module_name, FileSystem *fs) {
+  name = module_name;
+  file_system = fs;
+}
+IOModule::IOModule(string module_name, FileSystem *fs, string e_data,
+    string t_data, string m_data) {
+  name = module_name;
+  file_system = fs;
+  e_file = e_data;
+  m_file = m_data;
+  t_file = t_data;
+}
 IOModule::~IOModule() {}
 
 void IOModule::GenerateUuid(string &uuid) {
@@ -49,19 +60,13 @@ void IOModule::GenerateUuid(string &uuid) {
   delete[] uuid_str;
 }
 
-bool IOModule::Init(string fs_prefix, ModuleType type, string uuid_str,
-    string event_fd_path, string table_fd_path, string meta_fd_path,
-    bool scope) {
+bool IOModule::Init(ModuleType type, string uuid_str, bool scope) {
   uuid = uuid_str;
   prog_uuid[name] = uuid_str;
-  std::unique_ptr<FileSystem> fs = make_unique<FileSystem>(
-      fs_prefix, event_fd_path, table_fd_path, meta_fd_path);
-  fs_ = std::move(fs);
-  return Load(type);
+  return Reload(type, scope);
 }
 
-bool IOModule::Init(
-    string fs_prefix, string &&text, ModuleType type, bool scope) {
+bool IOModule::Init(string &&text, ModuleType type, bool scope) {
   future<bool> res = std::async(std::launch::async,
       [this](string &&text) -> bool {
         mod_ = make_unique<ebpf::BPFModule>(0);
@@ -74,31 +79,29 @@ bool IOModule::Init(
   if (!ret)
     return false;
 
-  return Load(fs_prefix, type, scope);
+  return Load(type, scope);
 }
 
-bool IOModule::Load(ModuleType type) {
+bool IOModule::Reload(ModuleType type, bool scope) {
   bool ret = true;
-  std::ifstream t_file, m_file, e_file;
+  std::ifstream tableFile, metaFile, eventFile;
   string e_line, t_line, m_line;
   string file_name;
-  bool scope = false;
 
-  t_file.open(fs_->GetTableFile());
-  m_file.open(fs_->GetMetaFile());
-  e_file.open(fs_->GetEventFile());
+  tableFile.open(t_file);
+  metaFile.open(m_file);
+  eventFile.open(e_file);
 
-  while (getline(e_file, e_line)) {
+  while (getline(eventFile, e_line)) {
     file_name = e_line.substr(e_line.find_last_of("/") + 1);
     std::unique_ptr<Event> ev = make_unique<Event>(file_name);
     Event *ev_tmp = ev.get();
     event[file_name] = std::move(ev);
     ret = ev_tmp->InitEvent(this, type, e_line);
   }
-  e_file.close();
 
-  while (getline(t_file, t_line)) {
-    getline(m_file, m_line);
+  while (getline(tableFile, t_line)) {
+    getline(metaFile, m_line);
     file_name = t_line.substr(t_line.find_last_of("/") + 1);
     std::unique_ptr<Table> tb = make_unique<Table>(file_name, scope);
     Table *tb_tmp = tb.get();
@@ -106,19 +109,11 @@ bool IOModule::Load(ModuleType type) {
     file_name = m_line.substr(m_line.find_last_of("/") + 1);
     ret = tb_tmp->InitTable(this, t_line, m_line);
   }
-  t_file.close();
-  m_file.close();
   return ret;
 }
 
-bool IOModule::Load(string fs_prefix, ModuleType type, bool scope) {
+bool IOModule::Load(ModuleType type, bool scope) {
   bool ret = true;
-
-  // In this construnctor we can pass some arg. We need to
-  // pass the root of the filesystem like libiov/ or something else
-  std::unique_ptr<FileSystem> fs = make_unique<FileSystem>(fs_prefix);
-  // FileSystem *fs_tmp = fs.get();
-  fs_ = std::move(fs);
 
   num_functions = mod_->num_functions();
   num_tables = mod_->num_tables();
@@ -150,7 +145,7 @@ bool IOModule::Load(string fs_prefix, ModuleType type, bool scope) {
 
 ebpf::BPFModule *IOModule::GetBpfModule() const { return mod_.get(); }
 
-FileSystem *IOModule::GetFileSystemHandler() const { return fs_.get(); }
+FileSystem *IOModule::GetFileSystemHandler() const { return file_system; }
 
 std::vector<Table> IOModule::ShowStates(string module_name) {
   // Lookup the module in the filesystem
@@ -163,12 +158,12 @@ std::vector<Table> IOModule::ShowStates(string module_name) {
   string p;
 
   uuid_str = NameToUuid(module_name);
-  ret = fs_->MakePathName(p, this, TABLE, "", false);
+  ret = file_system->MakePathName(p, this, TABLE, "", false);
   if (!ret) {
     cout << "ERROR DETECTED in making pathname" << endl;
     return tables;
   }
-  v = fs_->GetFiles(p);
+  v = file_system->GetFiles(p);
   cout << "TABLES:" << endl;
   for (vector<string>::const_iterator it(v.begin()), it_end(v.end());
        it != it_end; ++it) {
@@ -189,13 +184,13 @@ vector<Event> IOModule::ShowEvents(string module_name) {
   string p;
 
   uuid_str = NameToUuid(module_name);
-  ret = fs_->MakePathName(p, this, EVENT, "", false);
+  ret = file_system->MakePathName(p, this, EVENT, "", false);
   if (!ret) {
     cout << "ERROR DETECTED in making pathname" << endl;
     return events;
   }
 
-  v = fs_->GetFiles(p);
+  v = file_system->GetFiles(p);
   cout << "EVENTS:" << endl;
   for (vector<string>::const_iterator it(v.begin()), it_end(v.end());
        it != it_end; ++it) {

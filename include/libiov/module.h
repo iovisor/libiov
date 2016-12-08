@@ -49,10 +49,16 @@ class IOModule {
   size_t num_functions;
   size_t num_tables;
   std::string name;
+  FileSystem *file_system;
+  std::string m_file;
+  std::string t_file;
+  std::string e_file;
 
  public:
   IOModule();
-  IOModule(std::string module_name);
+  IOModule(std::string module_name, FileSystem *fs);
+  IOModule(std::string module_name, FileSystem *fs, std::string event,
+      std::string table, std::string meta);
   ~IOModule();
 
   // Random number that uniquily identify a module. Look at filestem.h
@@ -60,13 +66,10 @@ class IOModule {
   std::map<std::string, std::string> prog_uuid;
 
   void GenerateUuid(std::string &uuid_str);
-  bool Load(ModuleType type);
-  bool Load(std::string fs_prefix, ModuleType type, bool scope);
-  bool Init(
-      std::string fs_prefix, std::string &&text, ModuleType type, bool scope);
-  bool Init(std::string fs_prefix, ModuleType type, std::string uuid_str,
-      std::string even_fd_path, std::string table_pd_path,
-      std::string meta_fd_path, bool scope);
+  bool Reload(ModuleType type, bool scope);
+  bool Load(ModuleType type, bool scope);
+  bool Init(std::string &&text, ModuleType type, bool scope);
+  bool Init(ModuleType type, std::string uuid_str, bool scope);
   ebpf::BPFModule *GetBpfModule() const;
   FileSystem *GetFileSystemHandler() const;
 

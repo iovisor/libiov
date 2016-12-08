@@ -49,6 +49,7 @@ namespace iov {
 
 class IOModule;
 class Table;
+class Event;
 
 class FileSystem {
   // Root of the filesystem is /sys/fs/bpf/libiov.
@@ -81,21 +82,20 @@ class FileSystem {
  public:
   FileSystem();
   FileSystem(std::string prefix);
-  FileSystem(std::string prefix, std::string e_data, std::string t_data,
-      std::string m_data);
   ~FileSystem();
   int Save(std::string p, int fd);
   int Open(std::string file);
   void Show(std::string pathname, std::vector<std::string> &files);
   int Delete(std::string pathname, bool recursive);
+  void UpdateIOModule(std::string name, std::unique_ptr<IOModule>);
+  IOModule *GetIOModule(std::string name);
+  Table *GetTable(std::string name);
+  void UpdateTable(std::string name, std::unique_ptr<Table>);
   bool MakePathName(std::string &p, IOModule *module, obj_type_t obj_type,
       std::string name, bool global);
   bool Replace(
       std::string &str, const std::string &from, const std::string &to);
   std::vector<std::string> GetFiles(std::string p);
-  std::string GetTableFile();
-  std::string GetMetaFile();
-  std::string GetEventFile();
   int createPath(mode_t mode, const std::string &rootPath, std::string &path);
 };
 }  // namespace iov
