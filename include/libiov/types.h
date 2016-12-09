@@ -19,6 +19,13 @@
 #include <unistd.h>
 #include <memory>
 
+enum ModuleType {
+  NET_FORWARD,
+  NET_POLICY,
+};
+
+enum obj_type_t { MODULE = 1, EVENT, TABLE, META };
+
 namespace iov {
 
 namespace internal {

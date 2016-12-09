@@ -19,6 +19,7 @@
 
 #include <libiov.h>
 #include "libiov/command.h"
+#include "libiov/filesystem.h"
 #include "libiov/module.h"
 
 #define CATCH_CONFIG_MAIN
@@ -31,10 +32,11 @@ using namespace iov;
 
 TEST_CASE("test multiple module loading", "[module_multi]") {
   Command cmd;
+  bool scope = false;
   for (int i = 0; i < 5; ++i) {
     string text = "int foo(void *ctx) { return 0; }";
     auto mod = unique_ptr<IOModule>(new IOModule());
-    REQUIRE(mod->Init(std::move(text), IOModule::NET_FORWARD).get() == true);
+    REQUIRE(mod->Init(std::move(text), NET_FORWARD, scope) == true);
     cmd.AddModule("test" + std::to_string(i), std::move(mod));
   }
   for (const auto &mod : cmd.GetModules())

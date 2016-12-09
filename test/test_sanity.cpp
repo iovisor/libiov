@@ -15,11 +15,19 @@
  */
 
 #include <libiov.h>
+#include "libiov/event.h"
+#include "libiov/filesystem.h"
 #include "libiov/module.h"
+#include "libiov/table.h"
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
 TEST_CASE("test basic library sanity", "[basic]") {
-  { iov::IOModule mod; }
+  {
+    iov::IOModule mod;
+    iov::Table table;
+    iov::Event event;
+    iov::FileSystem files;
+  }
 }

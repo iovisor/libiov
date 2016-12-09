@@ -16,9 +16,14 @@
 
 #pragma once
 
+#include <uuid/uuid.h>
+#include <uuid/uuid.h>
 #include <future>
 #include <string>
 
+#include "libiov/event.h"
+#include "libiov/filesystem.h"
+#include "libiov/table.h"
 #include "libiov/types.h"
 
 namespace ebpf {
@@ -27,24 +32,61 @@ class BPFModule;
 
 namespace iov {
 
+class Table;
+class Event;
+
 class IOModule {
- public:
-  enum ModuleType {
-    NET_FORWARD,
-    NET_POLICY,
-  };
+  // IOModule should be a collection of tables and/or events, where tables
+  // collect the states of a module (counters, lookups etc..) and events
+  // are the ingress and egress packet, kprobe etc... handlers
 
  private:
-  FileDescPtr prog_;
   std::unique_ptr<ebpf::BPFModule> mod_;
-
- private:
-  std::future<bool> Load(ModuleType type);
+  std::unique_ptr<FileSystem> fs_;
+  std::map<const std::string, std::unique_ptr<Event>> event;
+  std::map<const std::string, std::unique_ptr<Table>> table;
+  std::string uuid;
+  size_t num_functions;
+  size_t num_tables;
+  std::string name;
+  FileSystem *file_system;
+  std::string m_file;
+  std::string t_file;
+  std::string e_file;
 
  public:
   IOModule();
+  IOModule(std::string module_name, FileSystem *fs);
+  IOModule(std::string module_name, FileSystem *fs, std::string event,
+      std::string table, std::string meta);
   ~IOModule();
-  std::future<bool> Init(std::string &&text, ModuleType type);
+
+  // Random number that uniquily identify a module. Look at filestem.h
+  // for filesystem layout
+  std::map<std::string, std::string> prog_uuid;
+
+  void GenerateUuid(std::string &uuid_str);
+  bool Reload(ModuleType type, bool scope);
+  bool Load(ModuleType type, bool scope);
+  bool Init(std::string &&text, ModuleType type, bool scope);
+  bool Init(ModuleType type, std::string uuid_str, bool scope);
+  ebpf::BPFModule *GetBpfModule() const;
+  FileSystem *GetFileSystemHandler() const;
+
+  // Api to retrive uuid from prog_name
+  std::string NameToUuid(std::string module_name);
+
+  // Api to display one/all table states for a module
+  std::vector<Table> ShowStates(std::string module_name);
+
+  // Api to display all events for a module
+  std::vector<Event> ShowEvents(std::string module_name);
+  std::string GetUuid();
+  Table *GetTable(std::string name);
+  std::map<const std::string, std::unique_ptr<Event>>::iterator GetFirstEvent();
+  std::map<const std::string, std::unique_ptr<Event>>::iterator GetLastEvent();
+  std::map<const std::string, std::unique_ptr<Table>>::iterator GetFirstTable();
+  std::map<const std::string, std::unique_ptr<Table>>::iterator GetLastTable();
 };
 
 }  // namespace iov
