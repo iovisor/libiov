@@ -11,6 +11,7 @@ enable_testing()
 
 include(cmake/GetGitRevisionDescription.cmake)
 include(cmake/version.cmake)
+find_package(uuid)
 find_package(PkgConfig)
 find_library(LIBBCC NAMES bcc)
 pkg_search_module(LIBBCC REQUIRED libbcc)
